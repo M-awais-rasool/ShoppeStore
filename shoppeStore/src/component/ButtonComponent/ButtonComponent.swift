@@ -13,7 +13,7 @@ struct ButtonComponent: View {
     var backgroundColor: Color = Color.blue
     var textColor: Color = Color.white
     var cornerRadius: CGFloat = 16
-    var height: CGFloat = 50
+    var height: CGFloat = 40
     
     var body: some View {
         Button(action: action) {

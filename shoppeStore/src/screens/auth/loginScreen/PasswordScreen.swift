@@ -3,6 +3,7 @@ import SwiftUI
 struct PasswordScreen: View {
     @State private var password: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedIndex: Int?
+    @AppStorage("isLoggedIn") private var isLoggedIn = false
     
     private func moveFocus(fromIndex: Int, direction: Int) {
         let nextIndex = fromIndex + direction
@@ -93,9 +94,12 @@ struct PasswordScreen: View {
                         Text("Not you?")
                             .foregroundColor(.gray)
                         Button(action: {
-                            
                             let enteredPassword = password.joined()
-                            print("Entered password: \(enteredPassword)")
+                            
+                            if enteredPassword.count >= 6 {
+                                print("Entered password inside: \(enteredPassword)")
+                                isLoggedIn = true
+                            }
                         }) {
                             Image(systemName: "arrow.right.circle.fill")
                                 .resizable()
