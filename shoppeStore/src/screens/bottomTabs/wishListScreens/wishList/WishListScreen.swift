@@ -1,15 +1,33 @@
-//
-//  WishListScreen.swift
-//  shoppeStore
-//
-//  Created by Ch  A 𝔀 𝓪 𝓲 𝓼 on 16/01/2025.
-//
-
 import SwiftUI
 
 struct WishListScreen: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading, spacing: 0) {
+            headerSection
+                .padding(.horizontal, 10)
+    
+            ScrollView {
+                wishlistItemsSection
+                    .padding(.horizontal, 10)
+            }
+        }
+    }
+}
+
+private var headerSection: some View {
+    HStack {
+        Text("Wishlist")
+            .font(.largeTitle)
+            .fontWeight(.bold)
+        Spacer()
+    }
+}
+
+private var wishlistItemsSection: some View {
+    VStack(spacing: 16) {
+        ForEach(wishlistItems) { item in
+            WishListCards(item: item)
+        }
     }
 }
 
