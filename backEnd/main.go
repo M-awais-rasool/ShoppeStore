@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"shoppeStore/database"
+	_ "shoppeStore/docs"
 	"shoppeStore/envConfig"
 	"shoppeStore/routes"
 )

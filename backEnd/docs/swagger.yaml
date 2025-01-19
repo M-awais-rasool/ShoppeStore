@@ -1,0 +1,12 @@
+info:
+  contact: {}
+  description: This is a sample server for a demo application
+  title: Demo API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
