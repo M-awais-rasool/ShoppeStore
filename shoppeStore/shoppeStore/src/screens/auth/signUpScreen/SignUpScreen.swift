@@ -5,9 +5,11 @@ struct SignUpScreen: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var phoneNumber: String = ""
+    
     @State private var emailError: String = ""
     @State private var passwordError: String = ""
     @State private var phoneNoEror: String = ""
+    
     @State private var isShowingImagePicker = false
     @State private var isCameraSelected = false
     @State private var selectedImage: UIImage? = nil
