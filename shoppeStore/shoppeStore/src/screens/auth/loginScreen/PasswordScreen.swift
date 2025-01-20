@@ -4,11 +4,26 @@ struct PasswordScreen: View {
     @State private var password: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedIndex: Int?
     @AppStorage("isLoggedIn") private var isLoggedIn = false
+    let email: String
+    @State private var showToast = false
+    @State private var toastMessage = ""
     
     private func moveFocus(fromIndex: Int, direction: Int) {
         let nextIndex = fromIndex + direction
         if nextIndex >= 0 && nextIndex < 6 {
             focusedIndex = nextIndex
+        }
+    }
+    
+    func doLogin()async{
+        do{
+            print(email)
+            let res = try await Login(email: email, password: password.joined())
+            print(res)
+//            isLoggedIn = true
+        }catch{
+            toastMessage = error.localizedDescription
+            showToast = true
         }
     }
     
@@ -94,11 +109,14 @@ struct PasswordScreen: View {
                         Text("Not you?")
                             .foregroundColor(.gray)
                         Button(action: {
-                            let enteredPassword = password.joined()
-                            
-                            if enteredPassword.count >= 6 {
-                                print("Entered password inside: \(enteredPassword)")
-                                isLoggedIn = true
+                            Task{
+                                let enteredPassword = password.joined()
+                                if enteredPassword.count >= 6 {
+                                    await  doLogin()
+                                }else{
+                                    toastMessage = "Please enter valid password"
+                                    showToast = true
+                                }
                             }
                         }) {
                             Image(systemName: "arrow.right.circle.fill")
@@ -109,7 +127,7 @@ struct PasswordScreen: View {
                     }
                     .padding(.bottom, 50)
                     
-                }
+                }.toast(isShowing: $showToast, message: toastMessage)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -117,5 +135,5 @@ struct PasswordScreen: View {
     }
 }
 #Preview {
-    PasswordScreen()
+    PasswordScreen(email:"asdas")
 }

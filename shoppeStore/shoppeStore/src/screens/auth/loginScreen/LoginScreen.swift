@@ -5,15 +5,30 @@ struct LoginScreen: View {
     @State private var emailError: String = ""
     @State private var navigateToNextScreen = false
     @Environment(\.dismiss) private var dismiss
+    @State private var showToast = false
+    @State private var toastMessage = ""
     
     func validateInputs() -> Bool {
         emailError = ""
-        
         if !isValidEmail(email) {
             emailError = "Invalid email address"
             return false
         }
         return true
+    }
+    
+    func checkEmail() async {
+        do {
+            let _ = try await emailCheck(email: email)
+            toastMessage = "Login successful!"
+            showToast = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                navigateToNextScreen = true
+            }
+        } catch {
+            toastMessage = error.localizedDescription
+            showToast = true
+        }
     }
     
     var body: some View {
@@ -70,8 +85,10 @@ struct LoginScreen: View {
                     )
                     
                     ButtonComponent(title: "Next", action: {
-                        if validateInputs() {
-                            navigateToNextScreen = true
+                        Task {
+                            if validateInputs() {
+                                await checkEmail()
+                            }
                         }
                     }).padding(.top,20)
                     
@@ -87,8 +104,9 @@ struct LoginScreen: View {
             .navigationBarBackButtonHidden(true)
             .edgesIgnoringSafeArea(.all)
             .navigationDestination(isPresented: $navigateToNextScreen) {
-                PasswordScreen()
+                PasswordScreen(email: email)
             }
+            .toast(isShowing: $showToast, message: toastMessage)
         }
     }
 }
