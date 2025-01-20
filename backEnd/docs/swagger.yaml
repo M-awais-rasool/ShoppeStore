@@ -1,9 +1,115 @@
+definitions:
+  models.EmailSignIn:
+    description: Model for user registration
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  models.UserSignIn:
+    description: Model for user registration
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
 info:
   contact: {}
   description: This is a sample server for a demo application
   title: Demo API
   version: "1.0"
-paths: {}
+paths:
+  /Auth/email-check:
+    post:
+      consumes:
+      - application/json
+      description: Check if the user email exists in the database
+      parameters:
+      - description: User Email Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.EmailSignIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "404":
+          description: User not found
+        "500":
+          description: Internal Server Error
+      summary: Check User Email
+      tags:
+      - Auth
+  /Auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User Login Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserSignIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "404":
+          description: User not found
+        "500":
+          description: Internal Server Error
+      summary: User Login
+      tags:
+      - Auth
+  /Auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Image upload failed
+        "500":
+          description: Internal Server Error
+      summary: Sign up a new user
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     in: header
