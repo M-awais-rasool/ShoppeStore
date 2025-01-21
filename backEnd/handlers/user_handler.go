@@ -103,6 +103,7 @@ func Login(c *gin.Context) {
 		"data": gin.H{
 			"name":   storeUser.Name,
 			"email":  storeUser.Email,
+			"image":  storeUser.Image,
 			"token":  tokenString,
 			"userId": storeUser.ID.String(),
 		},
@@ -111,7 +112,7 @@ func Login(c *gin.Context) {
 
 // @Summary Sign up a new user
 // @Description Register a new user
-// @Tags users
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param name formData string true "Name"

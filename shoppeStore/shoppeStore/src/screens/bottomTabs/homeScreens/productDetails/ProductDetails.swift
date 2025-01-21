@@ -12,12 +12,19 @@ struct ProductDetails: View {
             ZStack(alignment: .bottom) {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading) {
-                        Image(product.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: UIScreen.main.bounds.width, height: 300)
-                            .clipped()
                         
+                        if let url = URL(string: product.image) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: UIScreen.main.bounds.width, height: 300)
+                                    .clipped()
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(width: UIScreen.main.bounds.width, height: 300)
+                            }
+                        }
                         VStack(alignment: .leading, spacing: 12) {
                             Text("$\(String(format: "%.2f", product.price))")
                                 .font(.title)
@@ -184,8 +191,13 @@ struct DeliveryOptionView: View {
 
 #Preview {
     ProductDetails(product: Product(
+        id: "1",
+        name: "asd",
         image: "product1",
         description: "This is a test product description",
-        price: 2.2
+        price:  2.2,
+        quantity: 22,
+        isWishList: false
+        
     ))
 }

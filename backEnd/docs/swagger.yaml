@@ -109,7 +109,26 @@ paths:
           description: Internal Server Error
       summary: Sign up a new user
       tags:
-      - users
+      - Auth
+  /Product/get-products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all products from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get all products
+      tags:
+      - Products
 securityDefinitions:
   BearerAuth:
     in: header
