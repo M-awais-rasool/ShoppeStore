@@ -8,11 +8,27 @@
 import SwiftUI
 
 struct ProductDetailSheet: View {
+    var ProductID:String
+    @Binding var wishList: Bool
     @State private var quantity: Int = 1
     @State private var selectedSize: String = "M"
     @State private var isFavorite: Bool = false
     
     let sizes = ["S", "M", "L", "XL", "XXL", "XXXL"]
+    
+    private func manageWishlistStatus() async {
+        do {
+            let result = try await wishList
+                ? RemoveFromWishList(productId: ProductID)
+                : AddFromWishList(productId: ProductID)
+            print(result)
+            if result.status == "success" {
+                wishList.toggle()
+            }
+        } catch {
+            print("Wishlist operation failed: \(error.localizedDescription)")
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -85,9 +101,11 @@ struct ProductDetailSheet: View {
             
             HStack(spacing: 16) {
                 Button(action: {
-                    isFavorite.toggle()
+                    Task{
+                        await manageWishlistStatus()
+                    }
                 }) {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                    Image(systemName: wishList ? "heart.fill" : "heart")
                         .frame(width: 40, height: 40)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(10)
@@ -123,6 +141,6 @@ struct ProductDetailSheet: View {
     
 }
 
-#Preview {
-    ProductDetailSheet()
-}
+//#Preview {
+//    ProductDetailSheet()
+//}
