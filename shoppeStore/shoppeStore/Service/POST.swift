@@ -7,66 +7,65 @@
 
 import Foundation
 
-struct LoginResponse: Decodable {
-    let data: UserData
-    let message: String
-    let status: String
+
+
+func Login(body:[String:Any]) async throws -> LoginResponse{
+    do{
+        guard let url = URL(string: "http://192.168.100.252:8080/Auth/login") else{
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        let decoder = JSONDecoder()
+        if httpResponse.statusCode != 200 {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+        
+        return try decoder.decode(LoginResponse.self, from: data)
+    }catch{
+        print("Caught APIError: \(error)")
+        throw error
+    }
 }
 
-struct UserData: Decodable {
-    let email: String
-    let name: String
-    let token: String
-    let userId: String
-}
-
-struct EmailRes: Decodable {
-    let status: String
-    let data: DataResponse?
-    let message: String?
-    
-    struct DataResponse: Decodable {
-        let email: String
-    }
-    
-    enum APIStatus: String {
-        case success
-        case error
-    }
-    
-    var isSuccess: Bool {
-        return status == APIStatus.success.rawValue
-    }
-    
-}
-
-func Login(email: String, password: String) async throws -> LoginResponse {
+func emailCheckAPi(body: [String: Any]) async throws -> EmailRes {
     do {
-        let res = try await APIManger.shared.request(
-            url: "http://192.168.100.252:8080/Auth/email-check",
-            method: .POST,
-            headers: ["Content-Type": "application/json"],
-            body: ["email": email, "password": password],
-            responseType: LoginResponse.self
-        )
-        return res
-    } catch {
-        throw APIError.unknown(error.localizedDescription)
+        guard let url = URL(string: "http://192.168.100.252:8080/Auth/email-check") else {
+            print("Invalid URL")
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        let decoder = JSONDecoder()
+        if httpResponse.statusCode != 200 {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+        
+        return try decoder.decode(EmailRes.self, from: data)
+    } catch  {
+        print("Caught APIError: \(error)")
+        throw error
     }
 }
 
-func emailCheck(email: String) async throws -> EmailRes {
-    do {
-        let res = try await APIManger.shared.request(
-            url: "http://192.168.100.252:8080/Auth/email-check",
-            method: .POST,
-            headers: ["Content-Type": "application/json"],
-            body: ["email": email],
-            responseType: EmailRes.self
-        )
-        return res
-    } catch {
-        throw APIError.unknown(error.localizedDescription)
-    }
-}
 

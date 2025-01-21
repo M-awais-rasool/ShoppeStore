@@ -1,17 +1,28 @@
 //
-//  productModel.swift
+//  HomeModel.swift
 //  shoppeStore
 //
-//  Created by Ch  A 𝔀 𝓪 𝓲 𝓼 on 16/01/2025.
+//  Created by Ch  A 𝔀 𝓪 𝓲 𝓼 on 21/01/2025.
 //
 
 import Foundation
 
-struct Product: Identifiable {
-    let id = UUID()
-    let image: String
-    let description: String
-    let price: Double
+struct HomeProduct:Codable{
+    let status:String
+    let data:[Product]
+    
+    
+    
+}
+
+struct Product:Codable,Identifiable{
+    let id :String
+    let name :String
+    let image :String
+    let description :String
+    let price :Double
+    let quantity :Int
+    let isWishList :Bool
 }
 
 struct Category: Identifiable {
@@ -20,12 +31,6 @@ struct Category: Identifiable {
     let count: Int
     let images: [String]
 }
-
-let products = [
-    Product(image: "product1", description: "Lorem ipsum dolor sit amet consectetur.", price: 17.00),
-    Product(image: "product2", description: "Lorem ipsum dolor sit amet consectetur.", price: 32.00),
-    Product(image: "product3", description: "Lorem ipsum dolor sit amet consectetur.", price: 21.00)
-]
 
 let categories = [
     Category(name: "Clothing", count: 109, images: ["clothingProduct1", "clothingProduct2", "clothingProduct3", "clothingProduct1"]),

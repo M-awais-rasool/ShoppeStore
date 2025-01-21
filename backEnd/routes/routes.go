@@ -15,6 +15,8 @@ func SetRoutes() *gin.Engine {
 	router.POST("/Auth/login", handlers.Login)
 	router.POST("Auth/sign-up", handlers.SignUp)
 
+	router.GET("Product/get-products", handlers.GetAllProduct)
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

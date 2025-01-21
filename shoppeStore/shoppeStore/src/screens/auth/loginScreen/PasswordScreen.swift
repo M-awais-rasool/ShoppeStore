@@ -17,10 +17,21 @@ struct PasswordScreen: View {
     
     func doLogin()async{
         do{
-            print(email)
-            let res = try await Login(email: email, password: password.joined())
-            print(res)
-//            isLoggedIn = true
+            let body = ["email": email,"password":password.joined()]
+            let res = try await Login(body:body)
+            let defaults = UserDefaults.standard
+            
+            defaults.set(res.data.name, forKey: "name")
+            defaults.set(res.data.email, forKey: "email")
+            defaults.set(res.data.image, forKey: "image")
+            defaults.set(res.data.token, forKey: "token")
+            defaults.set(res.data.userId, forKey: "userId")
+            toastMessage = "Login successful!"
+            showToast = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                isLoggedIn = true
+            }
+            
         }catch{
             toastMessage = error.localizedDescription
             showToast = true
@@ -127,11 +138,12 @@ struct PasswordScreen: View {
                     }
                     .padding(.bottom, 50)
                     
-                }.toast(isShowing: $showToast, message: toastMessage)
+                }
             }
+            .navigationBarBackButtonHidden(true)
+            .edgesIgnoringSafeArea(.all)
+            .toast(isShowing: $showToast, message: toastMessage)
         }
-        .navigationBarBackButtonHidden(true)
-        .edgesIgnoringSafeArea(.all)
     }
 }
 #Preview {

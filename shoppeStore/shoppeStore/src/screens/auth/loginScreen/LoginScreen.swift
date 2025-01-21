@@ -19,12 +19,10 @@ struct LoginScreen: View {
     
     func checkEmail() async {
         do {
-            let _ = try await emailCheck(email: email)
-            toastMessage = "Login successful!"
-            showToast = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                navigateToNextScreen = true
-            }
+            let body = ["email": email]
+            let _ = try await emailCheckAPi(body:body)
+            navigateToNextScreen = true
+            
         } catch {
             toastMessage = error.localizedDescription
             showToast = true
