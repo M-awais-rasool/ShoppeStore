@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProductCard: View {
-    let product: Product
+    var product: Product
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

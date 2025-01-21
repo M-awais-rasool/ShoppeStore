@@ -5,10 +5,6 @@ struct HomeScreen: View {
     @State private var userName: String? = nil
     @State private var ProductData: HomeProduct?
     
-    private func loadProfileImage() {
-        
-    }
-    
     func getData()async{
         do{
             let defaults = UserDefaults.standard
@@ -70,7 +66,7 @@ struct HomeScreen: View {
                             HStack(spacing: 20) {
                                 if let products = ProductData?.data {
                                     ForEach(products) { product in
-                                        NavigationLink(destination: ProductDetails(product: product)) {
+                                        NavigationLink(destination: ProductDetails(product: product, wishList: product.isWishList))  {
                                             ProductCard(product: product)
                                         }
                                     }
@@ -103,7 +99,7 @@ struct HomeScreen: View {
             }
         }.onAppear{
             Task{
-                await  getData()
+                await getData()
             }
         }
     }

@@ -2,7 +2,8 @@
 import SwiftUI
 
 struct ProductDetails: View {
-    var product: Product
+    @State var product: Product
+    @State var wishList: Bool
     @State private var showingProductSheet = false
     @State private var selectedDeliveryOption: String? = nil
     @Environment(\.presentationMode) var presentationMode
@@ -90,7 +91,7 @@ struct ProductDetails: View {
                                         .font(.system(size: 22))
                                 }
                                 .sheet(isPresented: $showingProductSheet) {
-                                    ProductDetailSheet()
+                                    ProductDetailSheet(ProductID: product.id, wishList: $wishList)
                                         .presentationDetents([.height(300), .large])
                                         .presentationDragIndicator(.visible)
                                 }
@@ -188,16 +189,16 @@ struct DeliveryOptionView: View {
     }
 }
 
-
-#Preview {
-    ProductDetails(product: Product(
-        id: "1",
-        name: "asd",
-        image: "product1",
-        description: "This is a test product description",
-        price:  2.2,
-        quantity: 22,
-        isWishList: false
-        
-    ))
-}
+//
+//#Preview {
+//    ProductDetails(product: Product(
+//        id: "1",
+//        name: "asd",
+//        image: "product1",
+//        description: "This is a test product description",
+//        price:  2.2,
+//        quantity: 22,
+//        isWishList: false
+//    )
+//    )
+//}

@@ -17,6 +17,10 @@ func SetRoutes() *gin.Engine {
 
 	router.GET("Product/get-products", handlers.GetAllProduct)
 
+	router.GET("WishList/get-wishList", handlers.GetWishList)
+	router.POST("WishList/add-wishList:productID", handlers.AddWishList)
+	router.DELETE("WishList/remove-wishList:productID", handlers.RemoveFromWishList)
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

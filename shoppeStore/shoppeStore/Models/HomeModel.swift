@@ -22,7 +22,7 @@ struct Product:Codable,Identifiable{
     let description :String
     let price :Double
     let quantity :Int
-    let isWishList :Bool
+    var isWishList :Bool
 }
 
 struct Category: Identifiable {
