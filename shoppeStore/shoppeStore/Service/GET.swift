@@ -8,6 +8,11 @@
 import Foundation
 
 
+func getToken() -> String? {
+    return UserDefaults.standard.string(forKey: "token")
+}
+
+
 func GetHomeProduct()async throws -> HomeProduct{
     do{
         guard let url = URL(string: "http://192.168.100.252:8080/Product/get-products") else{
@@ -40,8 +45,60 @@ func GetHomeProduct()async throws -> HomeProduct{
     }
 }
 
+func GetWishListProduct() async throws -> WishListdata {
+    do {
+        guard let url = URL(string: "http://localhost:8080/WishList/get-wishList") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
 
-func getToken() -> String? {
-    return UserDefaults.standard.string(forKey: "token")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let decoder = JSONDecoder()
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+
+        return try decoder.decode(WishListdata.self, from: data)
+    } catch {
+        print("Error: \(error.localizedDescription)")
+        throw error
+    }
 }
 
+func GetCartList() async throws -> CartData {
+    do {
+        guard let url = URL(string: "http://localhost:8080/Cart/get-cart-items") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let decoder = JSONDecoder()
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+
+        return try decoder.decode(CartData.self, from: data)
+    } catch {
+        print("Error: \(error.localizedDescription)")
+        throw error
+    }
+}

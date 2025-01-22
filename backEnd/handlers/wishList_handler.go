@@ -19,7 +19,7 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Param productID path string true "Product ID"
-// @Success 200 "Product successfully added to wishlist"
+// @Success 200 "Success"
 // @Failure 401 "Unauthorized - Token missing or invalid"
 // @Failure 404 "Product not found"
 // @Failure 500 "Internal server error"
@@ -136,7 +136,7 @@ func RemoveFromWishList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 "Wishlist successfully fetched"
+// @Success 200 "Success"
 // @Failure 401 "Unauthorized - Token missing or invalid"
 // @Failure 500 "Internal server error"
 // @Router /WishList/get-wishList [get]

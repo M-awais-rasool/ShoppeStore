@@ -8,33 +8,64 @@
 import SwiftUI
 
 struct WishListCards: View {
-    let item: WishlistItem
+    var item: wishListProduct
+    var onRemoveSuccess: () -> Void
+    var onAddToCart: () -> Void
+    
+    private func removeFromWishList() async {
+        do {
+            let result = try await RemoveFromWishList(productId: item.productID)
+            print(result)
+            if result.status == "success" {
+                onRemoveSuccess()
+            }
+        } catch {
+            print("Wishlist operation failed: \(error.localizedDescription)")
+        }
+    }
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack() {
             ZStack(alignment: .topLeading) {
-                Image(item.image)
-                    .resizable()
-                    .frame(width: 120, height: 120)
-                    .cornerRadius(8)
-                    .overlay(
-                        Button(action: {
-                            
-                        }) {
-                            Image(systemName: "trash")
-                                .foregroundColor(.red)
-                                .padding(8)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                        }
-                            .padding(3),
-                        alignment: .topLeading
-                    )
+                AsyncImage(url: URL(string: item.image)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 100, height: 120)
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 120)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                Button(action: {
+                                    Task{
+                                        await removeFromWishList()
+                                    }
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                        .padding(8)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                },
+                                alignment: .topLeading
+                            )
+                    case .failure:
+                        Image(systemName: "photo")
+                            .frame(width: 100, height: 120)
+                            .background(Color.gray.opacity(0.3))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(item.title)
-                    .font(.subheadline)
+                Text(item.name)
+                    .font(.headline)
+                    .bold()
                     .lineLimit(2)
                 
                 Text("$\(String(format: "%.2f", item.price))")
@@ -49,7 +80,7 @@ struct WishListCards: View {
                         .cornerRadius(8)
                     Spacer()
                     Button(action: {
-                        
+                        onAddToCart()
                     }) {
                         Image(systemName: "cart.badge.plus")
                             .font(.title2)

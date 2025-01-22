@@ -13,19 +13,33 @@ struct ProductDetailSheet: View {
     @State private var quantity: Int = 1
     @State private var selectedSize: String = "M"
     @State private var isFavorite: Bool = false
-    
+    @State private var showToast = false
+    @State private var toastMessage = ""
     let sizes = ["S", "M", "L", "XL", "XXL", "XXXL"]
     
     private func manageWishlistStatus() async {
         do {
             let result = try await wishList
-                ? RemoveFromWishList(productId: ProductID)
-                : AddFromWishList(productId: ProductID)
+            ? RemoveFromWishList(productId: ProductID)
+            : AddFromWishList(productId: ProductID)
             print(result)
             if result.status == "success" {
                 wishList.toggle()
             }
         } catch {
+            print("Wishlist operation failed: \(error.localizedDescription)")
+        }
+    }
+    
+    private func addToCartApi()async{
+        do {
+            let res = try await AddToCart(productId: ProductID, quantity: quantity)
+            print(res)
+            if res.status == "success" {
+                toastMessage = res.message
+                showToast = true
+            }
+        }catch{
             print("Wishlist operation failed: \(error.localizedDescription)")
         }
     }
@@ -113,7 +127,9 @@ struct ProductDetailSheet: View {
                 }
                 
                 Button(action: {
-                    
+                    Task{
+                        await addToCartApi()
+                    }
                 }) {
                     Text("Add to cart")
                         .frame(height: 44)
@@ -137,6 +153,7 @@ struct ProductDetailSheet: View {
         }
         .padding(20)
         .background(Color.white)
+        .toast(isShowing: $showToast, message: toastMessage)
     }
     
 }

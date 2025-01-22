@@ -145,6 +145,134 @@ const docTemplate = `{
                 }
             }
         },
+        "/Cart/add-to-cart{productID}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a product to the authenticated user's cart",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Add product to user's cart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "productID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Quantity to add",
+                        "name": "quantity",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Insufficient product quantity"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token missing or invalid"
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/Cart/get-cart-items": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all items in the authenticated user's cart",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get all items in user's cart",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token missing or invalid"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/Cart/remove-to-cart{productID}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a product from the authenticated user's cart",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Remove product from user's cart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "productID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token missing or invalid"
+                    },
+                    "404": {
+                        "description": "Product not found in cart"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/Product/get-products": {
             "get": {
                 "security": [
@@ -205,7 +333,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product successfully added to wishlist"
+                        "description": "Success"
                     },
                     "401": {
                         "description": "Unauthorized - Token missing or invalid"
@@ -239,7 +367,7 @@ const docTemplate = `{
                 "summary": "Get user's wishlist",
                 "responses": {
                     "200": {
-                        "description": "Wishlist successfully fetched"
+                        "description": "Success"
                     },
                     "401": {
                         "description": "Unauthorized - Token missing or invalid"

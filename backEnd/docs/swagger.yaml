@@ -110,6 +110,87 @@ paths:
       summary: Sign up a new user
       tags:
       - Auth
+  /Cart/add-to-cart{productID}:
+    post:
+      consumes:
+      - application/json
+      description: Adds a product to the authenticated user's cart
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      - description: Quantity to add
+        in: query
+        minimum: 1
+        name: quantity
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Insufficient product quantity
+        "401":
+          description: Unauthorized - Token missing or invalid
+        "404":
+          description: Product not found
+        "500":
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Add product to user's cart
+      tags:
+      - Cart
+  /Cart/get-cart-items:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all items in the authenticated user's cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized - Token missing or invalid
+        "500":
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get all items in user's cart
+      tags:
+      - Cart
+  /Cart/remove-to-cart{productID}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a product from the authenticated user's cart
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized - Token missing or invalid
+        "404":
+          description: Product not found in cart
+        "500":
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Remove product from user's cart
+      tags:
+      - Cart
   /Product/get-products:
     get:
       consumes:
@@ -144,7 +225,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Product successfully added to wishlist
+          description: Success
         "401":
           description: Unauthorized - Token missing or invalid
         "404":
@@ -165,7 +246,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Wishlist successfully fetched
+          description: Success
         "401":
           description: Unauthorized - Token missing or invalid
         "500":
