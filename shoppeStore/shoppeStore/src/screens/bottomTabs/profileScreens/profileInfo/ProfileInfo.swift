@@ -5,6 +5,7 @@ struct ProfileInfo: View {
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
+    @State private var image = ""
     
     @State private var emailError = ""
     @State private var nameError = ""
@@ -30,6 +31,20 @@ struct ProfileInfo: View {
         return true
     }
     
+    func getData()async{
+        do {
+            let res = try await GetProfile()
+            if res.status == "success"{
+                name = res.data.name
+                email = res.data.email
+                image = res.data.image
+                name = res.data.name
+            }
+        }catch{
+            print("prifle error",error.localizedDescription)
+        }
+    }
+    
     var body: some View {
         NavigationView {
             VStack(alignment: .leading){
@@ -44,7 +59,7 @@ struct ProfileInfo: View {
                             .background(Color.blue)
                             .clipShape(Circle())
                     }
-                
+                    
                     Text("Profile Info")
                         .font(.title)
                         .bold()
@@ -52,17 +67,41 @@ struct ProfileInfo: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 20){
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                        .shadow(radius: 5)
+                    if let url = URL(string: image){
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .frame(width: 100, height: 100)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 100, height: 100)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                    .shadow(radius: 5)
+                            case .failure:
+                                Image(systemName: "photo")
+                                    .frame(width: 100, height: 100)
+                                    .background(Color.gray.opacity(0.3))
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
+                    }else{
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 100, height: 100)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                            .shadow(radius: 5)
+                    }
                     
                     InputComponent(placeholder: "Enter your name", inputText: $name, error: nameError)
                     InputComponent(placeholder: "Enter your email", inputText: $email, error: emailError)
-                    InputComponent(placeholder: "Enter your password", inputText: $password, error: passwordError,keyboardType: .numberPad)
                 }
                 
                 Spacer()
@@ -70,6 +109,11 @@ struct ProfileInfo: View {
                     
                 }}).padding(.bottom,30)
                 
+            }
+            .onAppear(){
+                Task{
+                    await getData()
+                }
             }
             .padding(.horizontal,20)
         }.navigationBarBackButtonHidden(true)
@@ -79,3 +123,4 @@ struct ProfileInfo: View {
 #Preview {
     ProfileInfo()
 }
+

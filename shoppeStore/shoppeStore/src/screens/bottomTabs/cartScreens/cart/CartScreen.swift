@@ -3,24 +3,29 @@ import SwiftUI
 struct CartScreen: View {
     @State private var cartData :[CartListProduct] = []
     @State private var wishlistItems: [wishListProduct] = []
+    @State private var addressData :Address? = nil
     @State private var TotalPrice: Double = 0
     @State private var showingAddressSheet = false
     @State private var shippingAddress = "John Doe\n26 Duong So 2 Thao Dien Ward, Apartment A\nDistrict 2, Ho Chi Minh City\nZIP: 700000\nPhone: +1234567890"
     @State private var showToast = false
     @State private var toastMessage = ""
     
-    func getData()async{
+    func getData() async {
         do {
             let res = try await GetCartList()
-            let res1 = try await GetWishListProduct()
-            print(res)
-            if res.status == "success" && res1.status == "success"{
-                wishlistItems = res1.data ?? []
-                cartData = res.data ?? []
-                TotalPrice = res.totalPrice
+            let wishListRes = try await GetWishListProduct()
+            let addressRes = try await GetAddres()
+            
+            guard res.status == "success", wishListRes.status == "success", addressRes.status == "success" else {
+                print("Error: Failed to fetch one or more data")
+                return
             }
-        }catch{
-            print(error)
+            wishlistItems = wishListRes.data ?? []
+            cartData = res.data ?? []
+            TotalPrice = res.totalPrice
+            addressData = addressRes.data
+        } catch {
+            print("An error occurred: \(error.localizedDescription)")
         }
     }
     
@@ -90,10 +95,20 @@ struct CartScreen: View {
                 ScrollView (showsIndicators: false){
                     VStack(alignment: .leading, spacing: 20) {
                         HStack {
-                            Text(shippingAddress)
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
+                            if let address = addressData {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text("\(address.address), \(address.apartment), \(address.city), \(address.district)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                    Text("\(address.name)\n\(address.phone)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                            } else {
+                                Text("No address data available.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
                             Spacer()
                             Button(action: { showingAddressSheet = true }) {
                                 Image(systemName: "pencil")
@@ -193,7 +208,7 @@ struct CartScreen: View {
             }
         }
         .sheet(isPresented: $showingAddressSheet) {
-            AddressEditSheet(address: $shippingAddress,isProfile: false)
+            AddressEditSheet(address: $addressData, isProfile: false)
         }
     }
 }

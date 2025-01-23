@@ -74,3 +74,34 @@ struct CartListProduct: Identifiable, Decodable {
     var price: Double
     var totalPrice: Double
 }
+
+//address screen
+
+struct AddressData:Decodable{
+    let status:String
+    let data:Address
+}
+
+struct Address :Identifiable, Decodable{
+    let id :String
+    let name:String
+    let address:String
+    let apartment:String
+    let city:String
+    let district:String
+    let phone:String
+}
+
+// profile screen
+struct Profile:Decodable {
+    let status:String
+    let data:ProfileData
+}
+
+struct ProfileData: Identifiable, Decodable{
+    let email: String
+    let image: String
+    let name: String
+    let id: String
+}
+
