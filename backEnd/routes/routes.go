@@ -25,6 +25,11 @@ func SetRoutes() *gin.Engine {
 	router.DELETE("Cart/remove-to-cart:productID", handlers.RemoveFromCart)
 	router.GET("Cart/get-cart-items", handlers.GetCartItems)
 
+	router.POST("Address/add-address", handlers.AddAddress)
+	router.GET("Address/get-address", handlers.GetAddress)
+
+	router.GET("Profile/get-profile", handlers.GetProfileData)
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

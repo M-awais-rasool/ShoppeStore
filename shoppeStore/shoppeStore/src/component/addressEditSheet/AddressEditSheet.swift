@@ -1,7 +1,8 @@
+
 import SwiftUI
 
 struct AddressEditSheet: View {
-    @Binding var address: String
+    @Binding var address: Address?
     var isProfile: Bool
     @Environment(\.presentationMode) var presentationMode
     
@@ -11,7 +12,6 @@ struct AddressEditSheet: View {
     @State private var city: String = ""
     @State private var district: String = ""
     @State private var phone: String = ""
-    
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
@@ -68,42 +68,37 @@ struct AddressEditSheet: View {
                             presentationMode.wrappedValue.dismiss()
                         }) {
                             Image(systemName: "arrow.backward")
-                                .font(.system(size: 18))
+                                .font(.system(size: 15))
                                 .foregroundColor(.white)
-                                .padding(8)
+                                .padding(6)
                                 .background(Color.blue)
                                 .clipShape(Circle())
                         }
-                    }else{
+                    } else {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.gray)
                             .font(.title3)
                     }
                 },
-                trailing:   Button("Reset") {
+                trailing: Button("Reset") {
                     resetForm()
                 }
                     .foregroundColor(.blue)
             )
         }
         .onAppear {
-            parseExistingAddress()
-        }.navigationBarBackButtonHidden(true)
+            updateFieldsFromAddress()
+        }
+        .navigationBarBackButtonHidden(true)
     }
     
     private var isFormValid: Bool {
         !name.isEmpty && !streetAddress.isEmpty && !city.isEmpty &&
-        !district.isEmpty  && !phone.isEmpty
+        !district.isEmpty && !phone.isEmpty
     }
     
     private func saveAddress() {
-        let formattedAddress = """
-        \(name)
-        \(streetAddress)\(apartment.isEmpty ? "" : ", \(apartment)")
-        \(district), \(city)
-        Phone: \(phone)
-        """
-        address = formattedAddress
+        
     }
     
     private func resetForm() {
@@ -115,21 +110,14 @@ struct AddressEditSheet: View {
         phone = ""
     }
     
-    private func parseExistingAddress() {
-        let addressLines = address.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        
-        if addressLines.count > 0 { name = addressLines[0] }
-        if addressLines.count > 1 {
-            let streetComponents = addressLines[1].split(separator: ",")
-            streetAddress = String(streetComponents[0])
-            if streetComponents.count > 1 { apartment = String(streetComponents[1]).trimmingCharacters(in: .whitespaces) }
-        }
-        if addressLines.count > 2 {
-            let cityAndDistrict = addressLines[2].split(separator: ",")
-            if cityAndDistrict.count > 0 { district = String(cityAndDistrict[0]) }
-            if cityAndDistrict.count > 1 { city = String(cityAndDistrict[1]).trimmingCharacters(in: .whitespaces) }
-        }
-        if addressLines.count > 4, addressLines[4].contains("Phone:") { phone = addressLines[4].replacingOccurrences(of: "Phone: ", with: "") }
+    private func updateFieldsFromAddress() {
+        guard let existingAddress = address else { return }
+        name = existingAddress.name
+        streetAddress = existingAddress.address
+        apartment = existingAddress.apartment
+        city = existingAddress.city
+        district = existingAddress.district
+        phone = existingAddress.phone
     }
 }
 
@@ -155,8 +143,4 @@ struct AddressTextField: View {
             .cornerRadius(12)
         }
     }
-}
-
-#Preview {
-    ShippingAddress()
 }

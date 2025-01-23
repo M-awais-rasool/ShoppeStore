@@ -8,9 +8,31 @@
 import SwiftUI
 
 struct ShippingAddress: View {
-    @State private var shippingAddress = "John Doe\n26 Duong So 2 Thao Dien Ward, Apartment A\nDistrict 2, Ho Chi Minh City\nZIP: 700000\nPhone: +1234567890"
+    @State private var addressData :Address? = nil
+    
+    func getData() async {
+        do {
+            let addressRes = try await GetAddres()
+            guard addressRes.status == "success" else {
+                return
+            }
+            addressData = addressRes.data
+        } catch {
+            print("An error occurred: \(error.localizedDescription)")
+        }
+    }
+    
     var body: some View {
-        AddressEditSheet(address: $shippingAddress,isProfile: true)
+        VStack {
+            if let _ = addressData {
+                AddressEditSheet(address: $addressData, isProfile: true)
+            }
+        }
+        .onAppear{
+            Task{
+                await getData()
+            }
+        }
     }
 }
 
