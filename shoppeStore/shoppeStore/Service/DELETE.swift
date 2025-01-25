@@ -9,7 +9,7 @@ import Foundation
 
 func RemoveFromWishList(productId: String) async throws -> ErrorResponse {
     do {
-        guard let url = URL(string: "http://192.168.100.252:8080/WishList/remove-wishList\(productId)") else {
+        guard let url = URL(string: "http://localhost:8080/WishList/remove-wishList\(productId)") else {
             throw APIError.invalidURL
         }
         guard let token = getToken() else {

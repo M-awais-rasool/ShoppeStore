@@ -11,7 +11,7 @@ import Foundation
 
 func Login(body:[String:Any]) async throws -> LoginResponse{
     do{
-        guard let url = URL(string: "http://192.168.100.252:8080/Auth/login") else{
+        guard let url = URL(string: "http://localhost:8080/Auth/login") else{
             throw APIError.invalidURL
         }
         
@@ -40,7 +40,7 @@ func Login(body:[String:Any]) async throws -> LoginResponse{
 
 func emailCheckAPi(body: [String: Any]) async throws -> EmailRes {
     do {
-        guard let url = URL(string: "http://192.168.100.252:8080/Auth/email-check") else {
+        guard let url = URL(string: "http://localhost:8080/Auth/email-check") else {
             print("Invalid URL")
             throw APIError.invalidURL
         }
@@ -71,7 +71,7 @@ func emailCheckAPi(body: [String: Any]) async throws -> EmailRes {
 
 func AddFromWishList(productId: String) async throws -> ErrorResponse {
     do {
-        guard let url = URL(string: "http://192.168.100.252:8080/WishList/add-wishList\(productId)") else {
+        guard let url = URL(string: "http://localhost:8080/WishList/add-wishList\(productId)") else {
             throw APIError.invalidURL
         }
         guard let token = getToken() else {
