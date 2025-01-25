@@ -106,7 +106,7 @@ struct ProductDetails: View {
                 
                 
                 VStack {
-                    HStack {
+                    HStack(spacing: 16) {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
                         }) {
@@ -117,10 +117,18 @@ struct ProductDetails: View {
                                 .background(Color.black.opacity(0.5))
                                 .clipShape(Circle())
                         }
-                        .padding(.top, 50)
-                        .padding(.leading, 10)
                         Spacer()
+                        NavigationLink(destination: ImageLens(imageUrl: product.image)){
+                            Image(systemName: "camera.viewfinder")
+                                .font(.system(size: 22))
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.black.opacity(0.5))
+                                .clipShape(Circle())
+                        }
                     }
+                    .padding(.top, 50)
+                    .padding(.horizontal, 10)
                     Spacer()
                 }
             }

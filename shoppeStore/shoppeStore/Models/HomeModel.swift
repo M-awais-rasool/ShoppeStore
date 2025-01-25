@@ -9,7 +9,7 @@ import Foundation
 
 struct HomeProduct:Codable{
     let status:String
-    let data:[Product]
+    let data:[Product]?
 }
 
 struct Product:Codable,Identifiable{

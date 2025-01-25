@@ -272,6 +272,34 @@ paths:
       summary: Get all products
       tags:
       - Products
+  /Product/get-related-products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve related products from the database by matching name or
+        description
+      parameters:
+      - description: Product name to search for related items
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get related products by name
+      tags:
+      - Products
   /Profile/get-profile:
     get:
       consumes:

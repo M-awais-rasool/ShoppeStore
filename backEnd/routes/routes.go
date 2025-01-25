@@ -16,6 +16,7 @@ func SetRoutes() *gin.Engine {
 	router.POST("Auth/sign-up", handlers.SignUp)
 
 	router.GET("Product/get-products", handlers.GetAllProduct)
+	router.GET("Product/get-related-products", handlers.GetSimilarProducts)
 
 	router.GET("WishList/get-wishList", handlers.GetWishList)
 	router.POST("WishList/add-wishList:productID", handlers.AddWishList)
