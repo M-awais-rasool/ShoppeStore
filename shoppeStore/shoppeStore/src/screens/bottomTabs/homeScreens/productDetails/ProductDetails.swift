@@ -118,7 +118,7 @@ struct ProductDetails: View {
                                 .clipShape(Circle())
                         }
                         Spacer()
-                        NavigationLink(destination: ImageLens(imageUrl: product.image)){
+                        NavigationLink(destination: ImageLens(imageUrl: product.image,productID:product.id)){
                             Image(systemName: "camera.viewfinder")
                                 .font(.system(size: 22))
                                 .foregroundColor(.white)

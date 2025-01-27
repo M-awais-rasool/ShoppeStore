@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,7 +37,7 @@ func GetAllProduct(c *gin.Context) {
 		return
 	}
 
-	query := `SELECT * FROM Product`
+	query := `SELECT * FROM products`
 
 	rows, err := database.DB.Query(query)
 	if err != nil {
@@ -52,7 +53,7 @@ func GetAllProduct(c *gin.Context) {
 
 	for rows.Next() {
 		var product models.Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Quantity, &product.Price, &product.IsWishList); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Price, &product.Quantity, &product.IsWishList, &product.Category); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
 				"message": fmt.Sprintf("Failed to scan item: %s", err.Error()),
@@ -77,12 +78,13 @@ func GetAllProduct(c *gin.Context) {
 }
 
 // @Summary Get related products by name
-// @Description Retrieve related products from the database by matching name or description
+// @Description Retrieve related products from the database by matching name or description, excluding specified product ID
 // @Tags Products
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param name query string true "Product name to search for related items"
+// @Param productId query string true "Product ID to exclude from results"
 // @Success 200 "Success"
 // @Failure 400 "Bad Request"
 // @Failure 401 "Unauthorized"
@@ -102,6 +104,7 @@ func GetSimilarProducts(c *gin.Context) {
 	}
 
 	productNames := c.Query("name")
+	productID := c.Query("productId")
 	if productNames == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Query parameter 'name' is required"})
 		return
@@ -113,19 +116,20 @@ func GetSimilarProducts(c *gin.Context) {
 	}
 
 	query := `
-		SELECT id, name, image, description, quantity, price, isWishlist
-		FROM Product
-		WHERE
+		SELECT id, name, image, description, price, quantity, isWishlist, category
+		FROM products
+		WHERE id != ? AND (
 	`
 	queryParts := []string{}
-	args := []interface{}{}
+	args := []interface{}{productID}
 
 	for _, name := range nameList {
-		queryParts = append(queryParts, "(CHARINDEX(?, Name) > 0 OR CHARINDEX(?, Description) > 0)")
-		args = append(args, name, name)
+		queryParts = append(queryParts, "(LOWER(CAST(Name AS VARCHAR(255))) LIKE LOWER(?) OR LOWER(CAST(Description AS VARCHAR(255))) LIKE LOWER(?) OR LOWER(CAST(Category AS VARCHAR(255))) LIKE LOWER(?))")
+		searchTerm := "%" + name + "%"
+		args = append(args, searchTerm, searchTerm, searchTerm)
 	}
 
-	query += strings.Join(queryParts, " OR ")
+	query += strings.Join(queryParts, " OR ") + ")"
 
 	rows, err := database.DB.Query(query, args...)
 	if err != nil {
@@ -138,7 +142,7 @@ func GetSimilarProducts(c *gin.Context) {
 	products := []models.Product{}
 	for rows.Next() {
 		var product models.Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Quantity, &product.Price, &product.IsWishList); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Price, &product.Quantity, &product.IsWishList, &product.Category); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading database results"})
 			return
@@ -151,4 +155,60 @@ func GetSimilarProducts(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"status": "success", "data": products})
 	}
+}
+
+// @Summary Get products by category
+// @Description Retrieve products from the database by category, or all products if no category specified
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param category path string false "Category"
+// @Success 200 "Success"
+// @Failure 500 "Internal Server Error"
+// @Router /Product/get-by-category{category} [get]
+func GetProductByCategory(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "token missing"})
+		return
+	}
+	_, err := utils.ValidateToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "invalid token"})
+		return
+	}
+
+	category := c.Param("category")
+	log.Println("category", category)
+	var query string
+	var rows *sql.Rows
+	if category == "" || category == "all" {
+		query = `SELECT * FROM products`
+		rows, err = database.DB.Query(query)
+	} else {
+		query = `SELECT * FROM products WHERE category = ?`
+		rows, err = database.DB.Query(query, category)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "failed to retrieve items"})
+		return
+	}
+	defer rows.Close()
+
+	var products []models.Product
+	for rows.Next() {
+		var product models.Product
+		if err := rows.Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Price, &product.Quantity, &product.IsWishList, &product.Category); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "failed to scan item"})
+			return
+		}
+		products = append(products, product)
+	}
+	if err := rows.Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "error iterating rows"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": products})
 }

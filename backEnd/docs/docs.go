@@ -85,6 +85,9 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized"
                     },
+                    "404": {
+                        "description": "Address not found"
+                    },
                     "500": {
                         "description": "Internal Server Error"
                     }
@@ -349,6 +352,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/Product/get-by-category{category}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve products from the database by category, or all products if no category specified",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get products by category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category",
+                        "name": "category",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/Product/get-products": {
             "get": {
                 "security": [
@@ -387,7 +426,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve related products from the database by matching name or description",
+                "description": "Retrieve related products from the database by matching name or description, excluding specified product ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -403,6 +442,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Product name to search for related items",
                         "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Product ID to exclude from results",
+                        "name": "productId",
                         "in": "query",
                         "required": true
                     }

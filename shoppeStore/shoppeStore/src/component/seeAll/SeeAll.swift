@@ -25,9 +25,10 @@ struct SeeAll: View {
                         .foregroundColor(.black)
                         .font(.system(size: 14, weight: .medium))
                     
-                    Image(systemName: "arrow.right.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 20))
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                        
                 }
             }
         }

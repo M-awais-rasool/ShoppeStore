@@ -1,20 +1,22 @@
-
 import SwiftUI
 import Vision
 import CoreML
 
 struct ImageLens: View {
-    @State  var imageUrl: String = ""
-    //    @State private var detectedProductName: String = ""
+    @State var imageUrl: String = ""
+    @State var productID: String = ""
     @State private var uiImage: UIImage?
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var products: [Product] = []
     @State private var isBottomSheetPresented: Bool = false
+    @State private var analysisProgress: CGFloat = 0
+    @State private var timeRemaining: Int = 5
     
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     func getData(name:String)async{
         do {
-            let res = try await GetSimilarProducts(name:name)
+            let res = try await GetSimilarProducts(name:name,id:productID)
             if res.status == "success"{
                 products = res.data ?? []
                 isBottomSheetPresented = true
@@ -26,103 +28,114 @@ struct ImageLens: View {
     }
     
     var body: some View {
-        VStack {
+        VStack{
             ZStack {
-                Color.white
+                Color(UIColor.systemBackground)
                     .edgesIgnoringSafeArea(.all)
-                VStack {
-                    if let url = URL(string: imageUrl), UIApplication.shared.canOpenURL(url) {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: .infinity, maxHeight: 200)
-                                .cornerRadius(15)
-                                .padding()
-                                .onAppear {
-                                    image.asUIImage { loadedImage in
-                                        guard let loadedImage = loadedImage else {
-                                            errorMessage = "Image Loading Failed"
-                                            return
+                
+                VStack{
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(UIColor.secondarySystemBackground))
+                            .shadow(radius: 10)
+                            .frame(height: 250)
+                        
+                        if let url = URL(string: imageUrl), UIApplication.shared.canOpenURL(url) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .scaleEffect(1.5)
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .frame(height: 250)
+                                        .cornerRadius(15)
+                                    
+                                        .onAppear {
+                                            image.asUIImage { loadedImage in
+                                                guard let loadedImage = loadedImage else {
+                                                    errorMessage = "Image Loading Failed"
+                                                    return
+                                                }
+                                                self.uiImage = loadedImage
+                                                self.isLoading = true
+                                                startAnalysis(loadedImage)
+                                            }
                                         }
-                                        self.uiImage = loadedImage
-                                        self.isLoading = true
-                                        detectObjectsAndClassify(from: loadedImage)
-                                    }
+                                case .failure(_):
+                                    Text("Failed to load image")
+                                        .foregroundColor(.red)
+                                @unknown default:
+                                    EmptyView()
                                 }
-                        } placeholder: {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                .scaleEffect(1.5)
-                                .frame(maxWidth: .infinity, maxHeight: 200)
+                            }
+                        } else {
+                            VStack(spacing: 10) {
+                                Image(systemName: "photo.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.gray)
+                                Text("Invalid Image URL")
+                                    .foregroundColor(.red)
+                            }
                         }
-                    } else {
-                        Text("Invalid Image URL")
-                            .foregroundColor(.red)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom,10)
+                    
+                    if isLoading {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(height: 4)
+                                
+                                Rectangle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: geometry.size.width * analysisProgress, height: 4)
+                                    .animation(.linear, value: analysisProgress)
+                            }
+                            .cornerRadius(2)
+                        }
+                        .frame(height: 4)
+                        .padding(.horizontal)
                     }
                     
-                    VStack {
-                        if isLoading {
-                            ProgressView("Analyzing Image...")
-                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                .padding()
-                        }
-                        if let errorMessage = errorMessage {
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .padding()
-                        }
+                    if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.red.opacity(0.1))
+                            )
+                            .padding(.horizontal)
                     }
-                    if !products.isEmpty {
-                        LensBottomSheet(product: $products)
-                    }
-                    Spacer()
+                    LensBottomSheet(product: $products, isLoading: $isLoading)
+                        .transition(.move(edge: .bottom))
                 }
-                
             }
-            
         }
-        .background(Color.white)
+        .onReceive(timer) { _ in
+            if isLoading && timeRemaining > 0 {
+                timeRemaining -= 1
+                analysisProgress = CGFloat(5 - timeRemaining) / 5.0
+            }
+        }
     }
     
-    
-    private func detectObjectsAndClassify(from image: UIImage) {
-        guard let cgImage = image.cgImage else {
-            errorMessage = "Image Conversion Failed"
-            return
-        }
+    private func startAnalysis(_ image: UIImage) {
+        timeRemaining = 5
+        analysisProgress = 0
         
-        do {
-            let modelConfiguration = MLModelConfiguration()
-            let model = try VNCoreMLModel(for: YOLOv3(configuration: modelConfiguration).model)
-            
-            let request = VNCoreMLRequest(model: model) { request, error in
-                if let error = error {
-                    self.errorMessage = "Detection Request Error: \(error.localizedDescription)"
-                    self.isLoading = false
-                    return
-                }
-                
-                if let results = request.results as? [VNRecognizedObjectObservation], !results.isEmpty {
-                    if let _ = results.first {
-                        classifyImage(image)
-                    }
-                } else {
-                    self.errorMessage = "No Objects Detected"
-                    self.isLoading = false
-                }
-            }
-            
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do{
-                try handler.perform([request])
-            }catch{
-                self.errorMessage = "Detection Error: \(error.localizedDescription)"
-                self.isLoading = false
-            }
-        } catch {
-            self.errorMessage = "Model Initialization Error: \(error.localizedDescription)"
-            self.isLoading = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            classifyImage(image)
         }
     }
     
@@ -143,14 +156,17 @@ struct ImageLens: View {
                     return
                 }
                 
-                if let results = request.results as? [VNClassificationObservation],
-                   let firstResult = results.first {
-                    //                    self.detectedProductName = firstResult.identifier
-                    Task{
-                        print("identifier",firstResult.identifier)
-                        await getData(name:firstResult.identifier)
+                if let results = request.results as? [VNClassificationObservation] {
+                    if let topResult = results.sorted(by: { $0.confidence > $1.confidence }).first {
+                        Task {
+                            print(topResult.identifier)
+                            await getData(name: topResult.identifier)
+                        }
+                        self.isLoading = false
+                    } else {
+                        self.errorMessage = "No Classification Results"
+                        self.isLoading = false
                     }
-                    self.isLoading = false
                 } else {
                     self.errorMessage = "No Classification Results"
                     self.isLoading = false
@@ -180,10 +196,6 @@ extension Image {
     }
 }
 
-struct LensView_Previews: PreviewProvider {
-    static var previews: some View {
-        ImageLens(imageUrl: "https://example.com/sample-image.jpg")
-    }
+#Preview {
+    ImageLens(imageUrl: "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg")
 }
-
-

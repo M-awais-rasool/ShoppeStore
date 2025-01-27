@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"shoppeStore/database"
 	"shoppeStore/models"
@@ -76,6 +77,7 @@ func AddAddress(c *gin.Context) {
 // @Security BearerAuth
 // @Success 200 "Success"
 // @Failure 401 "Unauthorized"
+// @Failure 404 "Address not found"
 // @Failure 500 "Internal Server Error"
 // @Router /Address/get-address [get]
 func GetAddress(c *gin.Context) {
@@ -98,6 +100,11 @@ func GetAddress(c *gin.Context) {
 
 	err = database.DB.QueryRow(query, userId).Scan(&ID, &address.Name, &address.Address, &address.Apartment, &address.Phone, &address.City, &address.District)
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Address not found"})
+			return
+		}
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Database error"})
 		return
 	}

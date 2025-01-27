@@ -41,7 +41,7 @@ func AddWishList(c *gin.Context) {
 	productID := c.Param("productID")
 
 	var product models.Product
-	productQuery := `SELECT id, name, image, description, price FROM Product WHERE id = ?`
+	productQuery := `SELECT id, name, image, description, price FROM products WHERE id = ?`
 	err = database.DB.QueryRow(productQuery, productID).Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Price)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
@@ -60,7 +60,7 @@ func AddWishList(c *gin.Context) {
 		return
 	}
 
-	updateProductQuery := `UPDATE Product SET isWishlist = 1 WHERE id = ?`
+	updateProductQuery := `UPDATE products SET isWishlist = 1 WHERE id = ?`
 	_, err = database.DB.Exec(updateProductQuery, productID)
 	if err != nil {
 		log.Println(err)
@@ -119,7 +119,7 @@ func RemoveFromWishList(c *gin.Context) {
 		return
 	}
 
-	updateProductQuery := `UPDATE Product SET isWishlist = 0 WHERE id = ?`
+	updateProductQuery := `UPDATE products SET isWishlist = 0 WHERE id = ?`
 	_, err = database.DB.Exec(updateProductQuery, productID)
 	if err != nil {
 		log.Println(err)

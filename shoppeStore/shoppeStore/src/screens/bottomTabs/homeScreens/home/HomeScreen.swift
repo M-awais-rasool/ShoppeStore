@@ -79,7 +79,7 @@ struct HomeScreen: View {
                         //catagory list
                         SeeAll(
                             title: "Categories",
-                            destination: AnyView(NewItemList())
+                            destination: AnyView(CategoryList(categoryName:""))
                         )
                         .padding(.top,10)
                         .padding(.bottom,-5)
@@ -89,7 +89,9 @@ struct HomeScreen: View {
                             GridItem(.flexible())
                         ], spacing: 10) {
                             ForEach(categories) { category in
-                                CategoryCard(category: category)
+                                NavigationLink(destination: CategoryList(categoryName: category.name)) {
+                                    CategoryCard(category: category)
+                                }
                             }
                         }
                         Spacer()

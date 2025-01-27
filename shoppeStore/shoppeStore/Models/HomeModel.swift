@@ -19,6 +19,7 @@ struct Product:Codable,Identifiable{
     let description :String
     let price :Double
     let quantity :Int
+    let category:String
     var isWishList :Bool
 }
 
@@ -30,11 +31,19 @@ struct Category: Identifiable {
 }
 
 let categories = [
-    Category(name: "Clothing", count: 109, images: ["clothingProduct1", "clothingProduct2", "clothingProduct3", "clothingProduct1"]),
+    Category(name: "T-shirts", count: 109, images: ["clothingProduct1", "clothingProduct2", "clothingProduct3", "clothingProduct1"]),
     Category(name: "Shoes", count: 530, images: ["shoesProduct4", "shoesProduct2", "shoesProduct3", "shoesProduct4"]),
     Category(name: "Bags", count: 87, images: ["bagProduct1", "bagProduct2", "bagProduct3", "bagProduct1"]),
-    Category(name: "Lingerie", count: 218, images: ["clothingProduct1", "shoesProduct4", "bagProduct2", "clothingProduct1"])
+    Category(name: "Shorts", count: 218, images: ["clothingProduct1", "shoesProduct4", "bagProduct2", "clothingProduct1"])
 ]
+
+// category screen
+struct CategoryScreen: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    var isSelected: Bool = false
+}
 //
 //wishList screen
 struct WishListdata: Decodable {

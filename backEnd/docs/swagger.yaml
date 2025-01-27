@@ -79,6 +79,8 @@ paths:
           description: Success
         "401":
           description: Unauthorized
+        "404":
+          description: Address not found
         "500":
           description: Internal Server Error
       security:
@@ -253,6 +255,29 @@ paths:
       summary: Remove product from user's cart
       tags:
       - Cart
+  /Product/get-by-category{category}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve products from the database by category, or all products
+        if no category specified
+      parameters:
+      - description: Category
+        in: path
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get products by category
+      tags:
+      - Products
   /Product/get-products:
     get:
       consumes:
@@ -277,11 +302,16 @@ paths:
       consumes:
       - application/json
       description: Retrieve related products from the database by matching name or
-        description
+        description, excluding specified product ID
       parameters:
       - description: Product name to search for related items
         in: query
         name: name
+        required: true
+        type: string
+      - description: Product ID to exclude from results
+        in: query
+        name: productId
         required: true
         type: string
       produces:

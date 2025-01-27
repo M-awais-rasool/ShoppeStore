@@ -53,7 +53,7 @@ func AddToCart(c *gin.Context) {
 	}
 
 	var product models.Product
-	productQuery := `SELECT id, name, image, description, quantity, price, isWishlist FROM Product WHERE id = ?`
+	productQuery := `SELECT id, name, image, description, quantity, price, isWishlist FROM products WHERE id = ?`
 	err = database.DB.QueryRow(productQuery, productID).Scan(&product.ID, &product.Name, &product.Image, &product.Description, &product.Quantity, &product.Price, &product.IsWishList)
 	if err == sql.ErrNoRows {
 		log.Println("Product not found for productID:", productID)
@@ -185,7 +185,7 @@ func GetCartItems(c *gin.Context) {
 
 	cartQuery := `SELECT c.id, c.productID, p.name, p.image, p.description, c.quantity, p.price
                   FROM Cart c
-                  JOIN Product p ON c.productID = p.id
+                  JOIN products p ON c.productID = p.id
                   WHERE c.userID = ?`
 	rows, err := database.DB.Query(cartQuery, userID)
 	if err != nil {
