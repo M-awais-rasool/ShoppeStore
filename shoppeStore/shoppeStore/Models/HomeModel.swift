@@ -114,3 +114,21 @@ struct ProfileData: Identifiable, Decodable{
     let id: String
 }
 
+// payment screen
+
+struct PaymentProduct:Codable{
+    let status:String
+    let data:ProductDetail?
+}
+
+struct ProductDetail:Codable,Identifiable{
+    let id :String
+    let name :String
+    let image :String
+    let description :String
+    let price :Double
+    let category:String
+    let quantity :Int
+    var isWishList :Bool
+}
+

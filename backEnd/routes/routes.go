@@ -18,6 +18,7 @@ func SetRoutes() *gin.Engine {
 	router.GET("Product/get-products", handlers.GetAllProduct)
 	router.GET("Product/get-related-products", handlers.GetSimilarProducts)
 	router.GET("Product/get-by-category:category", handlers.GetProductByCategory)
+	router.GET("Product/get-by-id/:id", handlers.GetProductById)
 
 	router.GET("WishList/get-wishList", handlers.GetWishList)
 	router.POST("WishList/add-wishList:productID", handlers.AddWishList)
@@ -31,6 +32,10 @@ func SetRoutes() *gin.Engine {
 	router.GET("Address/get-address", handlers.GetAddress)
 
 	router.GET("Profile/get-profile", handlers.GetProfileData)
+
+	router.POST("Orders/place-single-order", handlers.PlaceSingleOrder)
+	router.POST("Orders/place-cart-order", handlers.PlaceCartOrder)
+	router.GET("Orders/get-user-orders", handlers.GetOrders)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router

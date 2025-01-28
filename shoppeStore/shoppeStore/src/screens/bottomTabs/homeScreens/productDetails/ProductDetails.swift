@@ -7,13 +7,13 @@ struct ProductDetails: View {
     @State private var showingProductSheet = false
     @State private var selectedDeliveryOption: String? = nil
     @Environment(\.presentationMode) var presentationMode
+    @State private var navigateToPaymentScreen = false
     
     var body: some View {
         NavigationView{
             ZStack(alignment: .bottom) {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading) {
-                        
                         if let url = URL(string: product.image) {
                             AsyncImage(url: url) { image in
                                 image
@@ -26,6 +26,7 @@ struct ProductDetails: View {
                                     .frame(width: UIScreen.main.bounds.width, height: 300)
                             }
                         }
+                        
                         VStack(alignment: .leading, spacing: 12) {
                             Text("$\(String(format: "%.2f", product.price))")
                                 .font(.title)
@@ -91,9 +92,13 @@ struct ProductDetails: View {
                                         .font(.system(size: 22))
                                 }
                                 .sheet(isPresented: $showingProductSheet) {
-                                    ProductDetailSheet(ProductID: product.id, wishList: $wishList)
-                                        .presentationDetents([.height(300), .large])
-                                        .presentationDragIndicator(.visible)
+                                    ProductDetailSheet(
+                                        ProductID: product.id,
+                                        wishList: $wishList,
+                                        navigateToPaymentScreen: $navigateToPaymentScreen
+                                    )
+                                    .presentationDetents([.height(300), .large])
+                                    .presentationDragIndicator(.visible)
                                 }
                             }
                         }
@@ -101,9 +106,8 @@ struct ProductDetails: View {
                         
                         Spacer()
                     }
-                    .padding(.bottom,10)
+                    .padding(.bottom, 10)
                 }
-                
                 
                 VStack {
                     HStack(spacing: 16) {
@@ -118,7 +122,7 @@ struct ProductDetails: View {
                                 .clipShape(Circle())
                         }
                         Spacer()
-                        NavigationLink(destination: ImageLens(imageUrl: product.image,productID:product.id)){
+                        NavigationLink(destination: ImageLens(imageUrl: product.image, productID: product.id)) {
                             Image(systemName: "camera.viewfinder")
                                 .font(.system(size: 22))
                                 .foregroundColor(.white)
@@ -133,7 +137,11 @@ struct ProductDetails: View {
                 }
             }
             .edgesIgnoringSafeArea(.top)
-        }.navigationBarBackButtonHidden(true)
+            .navigationDestination(isPresented: $navigateToPaymentScreen) {
+                PaymentScreen(flag: "detailScreen", productId: product.id)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
     }
 }
 

@@ -211,3 +211,31 @@ func GetProductByCategory(category:String)async throws -> HomeProduct {
         throw error
     }
 }
+
+func GetProductById(id:String)async throws -> PaymentProduct {
+    do{
+        print(id)
+        guard let url = URL(string: "http://localhost:8080/Product/get-by-id/\(id)") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data,response) = try await URLSession.shared.data(for: request)
+        let decoder = JSONDecoder()
+        
+        guard let htttpResponse = response as? HTTPURLResponse, htttpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        return try decoder.decode(PaymentProduct.self, from: data)
+    }catch{
+        print("Error: \(error.localizedDescription)")
+        throw error
+    }
+}

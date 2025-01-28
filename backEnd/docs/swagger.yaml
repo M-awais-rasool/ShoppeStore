@@ -22,6 +22,20 @@ definitions:
     required:
     - email
     type: object
+  models.OrderRequest:
+    properties:
+      productID:
+        type: string
+      quantity:
+        type: integer
+      size:
+        example: S M L XL XXL XXXL
+        type: string
+    required:
+    - productID
+    - quantity
+    - size
+    type: object
   models.UserSignIn:
     description: Model for user registration
     properties:
@@ -255,6 +269,74 @@ paths:
       summary: Remove product from user's cart
       tags:
       - Cart
+  /Orders/get-user-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get all orders placed by the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Invalid input data
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get User Orders
+      tags:
+      - Orders
+  /Orders/place-cart-order:
+    post:
+      consumes:
+      - application/json
+      description: Places orders for all items in user's cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Place cart orders
+      tags:
+      - Orders
+  /Orders/place-single-order:
+    post:
+      consumes:
+      - application/json
+      description: Places an order for a single product
+      parameters:
+      - description: Order Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Invalid input data
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Place a single order
+      tags:
+      - Orders
   /Product/get-by-category{category}:
     get:
       consumes:
@@ -276,6 +358,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Get products by category
+      tags:
+      - Products
+  /Product/get-by-id/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a product from the database by its ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get product by ID
       tags:
       - Products
   /Product/get-products:

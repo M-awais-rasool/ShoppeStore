@@ -212,3 +212,60 @@ func GetProductByCategory(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": products})
 }
+
+// @Summary Get product by ID
+// @Description Retrieve a product from the database by its ID
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Product ID"
+// @Success 200 "Success"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /Product/get-by-id/{id} [get]
+func GetProductById(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	_, err := utils.ValidateToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Invalid token"})
+		return
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Product ID is required"})
+		return
+	}
+
+	query := `SELECT * FROM products WHERE id = ?`
+	var product models.Product
+	err = database.DB.QueryRow(query, id).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Image,
+		&product.Description,
+		&product.Price,
+		&product.Quantity,
+		&product.IsWishList,
+		&product.Category,
+	)
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Product not found"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": fmt.Sprintf("Database error: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": product})
+}
