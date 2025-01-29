@@ -8,6 +8,8 @@ struct ProductDetails: View {
     @State private var selectedDeliveryOption: String? = nil
     @Environment(\.presentationMode) var presentationMode
     @State private var navigateToPaymentScreen = false
+    @State private var quantity: Int = 1
+    @State private var selectedSize: String = "M"
     
     var body: some View {
         NavigationView{
@@ -95,7 +97,9 @@ struct ProductDetails: View {
                                     ProductDetailSheet(
                                         ProductID: product.id,
                                         wishList: $wishList,
-                                        navigateToPaymentScreen: $navigateToPaymentScreen
+                                        navigateToPaymentScreen: $navigateToPaymentScreen,
+                                        quantity:$quantity,
+                                        selectedSize: $selectedSize
                                     )
                                     .presentationDetents([.height(300), .large])
                                     .presentationDragIndicator(.visible)
@@ -138,7 +142,12 @@ struct ProductDetails: View {
             }
             .edgesIgnoringSafeArea(.top)
             .navigationDestination(isPresented: $navigateToPaymentScreen) {
-                PaymentScreen(flag: "detailScreen", productId: product.id)
+                PaymentScreen(
+                    flag: "detailScreen",
+                    productId: product.id,
+                    quantity:quantity,
+                    selectedSize:selectedSize
+                )
             }
         }
         .navigationBarBackButtonHidden(true)

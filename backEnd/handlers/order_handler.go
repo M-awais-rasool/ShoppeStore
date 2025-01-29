@@ -68,6 +68,35 @@ func PlaceSingleOrder(c *gin.Context) {
 		return
 	}
 
+	var deliveryStatus = []map[string]interface{}{
+		{
+			"id":     1,
+			"status": "Standard",
+			"price":  20.0,
+		},
+		{
+			"id":     2,
+			"status": "Express",
+			"price":  30.0,
+		},
+	}
+
+	var deliveryPrice float64
+	var DelStatus string
+	deliveryFound := false
+	for _, delivery := range deliveryStatus {
+		if delivery["id"].(int) == req.DeliveryID {
+			deliveryPrice = delivery["price"].(float64)
+			DelStatus = delivery["status"].(string)
+			deliveryFound = true
+			break
+		}
+	}
+	if !deliveryFound {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid delivery option"})
+		return
+	}
+
 	var price float64
 	var productName string
 	var productImage string
@@ -81,11 +110,11 @@ func PlaceSingleOrder(c *gin.Context) {
 	id := uuid.NewString()
 	OrderItemId := uuid.NewString()
 	orderID := GenerateOrderID()
-	totalPrice := price * float64(req.Quantity)
+	totalPrice := (price * float64(req.Quantity)) + deliveryPrice
 	status := "Pending"
 
-	_, err = database.DB.Exec("INSERT INTO orders (id, orderID, userID, totalPrice, status) VALUES ($1, $2, $3, $4, $5)",
-		id, orderID, userID, totalPrice, status)
+	_, err = database.DB.Exec("INSERT INTO orders (id, orderID, userID, totalPrice, status, DeliveryStatus) VALUES ($1, $2, $3, $4, $5, $6)",
+		id, orderID, userID, totalPrice, status, DelStatus)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to place order"})
@@ -100,7 +129,7 @@ func PlaceSingleOrder(c *gin.Context) {
 		return
 	}
 	// Order placed successfully
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": orderID})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "orderID": orderID})
 }
 
 // @Summary Place cart orders
@@ -230,7 +259,7 @@ func GetOrders(c *gin.Context) {
 	userID := claim.Subject
 
 	rows, err := database.DB.Query(`
-		SELECT o.id, o.orderID, o.totalPrice, o.status, oi.productID, oi.image, oi.name, oi.quantity, oi.price, oi.size
+		SELECT o.id, o.orderID, o.totalPrice, o.status, o.DeliveryStatus, oi.productID, oi.image, oi.name, oi.quantity, oi.price, oi.size
 		FROM orders o
 		JOIN orderItems oi ON o.orderID = oi.orderID
 		WHERE o.userID = $1
@@ -244,12 +273,12 @@ func GetOrders(c *gin.Context) {
 
 	orderMap := make(map[string]gin.H)
 	for rows.Next() {
-		var orderID, productID, id, image, name, status, size string
+		var orderID, productID, id, image, name, status, size, DeliveryStatus string
 		var totalPrice float64
 		var quantity int
 		var price float64
 
-		err := rows.Scan(&id, &orderID, &totalPrice, &status, &productID, &image, &name, &quantity, &price, &size)
+		err := rows.Scan(&id, &orderID, &totalPrice, &status, &DeliveryStatus, &productID, &image, &name, &quantity, &price, &size)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse order data"})
@@ -258,11 +287,12 @@ func GetOrders(c *gin.Context) {
 
 		if _, exists := orderMap[orderID]; !exists {
 			orderMap[orderID] = gin.H{
-				"id":         id,
-				"orderID":    orderID,
-				"totalPrice": totalPrice,
-				"status":     status,
-				"products":   []gin.H{},
+				"id":             id,
+				"orderID":        orderID,
+				"totalPrice":     totalPrice,
+				"status":         status,
+				"DeliveryStatus": DeliveryStatus,
+				"products":       []gin.H{},
 			}
 		}
 

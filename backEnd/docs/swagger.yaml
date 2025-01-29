@@ -24,6 +24,8 @@ definitions:
     type: object
   models.OrderRequest:
     properties:
+      deliveryID:
+        type: integer
       productID:
         type: string
       quantity:
@@ -32,6 +34,7 @@ definitions:
         example: S M L XL XXL XXXL
         type: string
     required:
+    - deliveryID
     - productID
     - quantity
     - size

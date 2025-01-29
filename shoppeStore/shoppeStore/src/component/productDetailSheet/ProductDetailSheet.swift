@@ -12,8 +12,8 @@ struct ProductDetailSheet: View {
     var ProductID:String
     @Binding var wishList: Bool
     @Binding var navigateToPaymentScreen: Bool
-    @State private var quantity: Int = 1
-    @State private var selectedSize: String = "M"
+    @Binding var quantity: Int
+    @Binding var selectedSize: String 
     @State private var isFavorite: Bool = false
     @State private var showToast = false
     @State private var toastMessage = ""

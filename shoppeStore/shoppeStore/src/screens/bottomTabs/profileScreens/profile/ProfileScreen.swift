@@ -21,6 +21,18 @@ struct ProfileScreen: View {
                             }
                         }
                         
+                        SettingsSectionView(title: "Orders") {
+                            NavigationLink(destination: OrdersHistory()) {
+                                SettingsRow(title: "Order History", icon: "clock.fill", iconColor: .orange)
+                            }
+                            //                            NavigationLink(destination: ActiveOrders()) {
+                            SettingsRow(title: "Active Orders", icon: "shippingbox.fill", iconColor: .blue)
+                            //                            }
+                            //                            NavigationLink(destination: Returns()) {
+                            SettingsRow(title: "Returns", icon: "arrow.uturn.left.circle.fill", iconColor: .red)
+                            //                            }
+                        }
+                        
                         SettingsSectionView(title: "Account") {
                             SettingsRow(title: "Language", icon: "globe.americas.fill", iconColor: .blue, value: "English")
                             

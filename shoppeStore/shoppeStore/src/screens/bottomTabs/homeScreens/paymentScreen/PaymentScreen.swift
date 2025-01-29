@@ -1,78 +1,113 @@
 import SwiftUI
 
-// MARK: - Models
-struct PaymentItem: Identifiable {
-    let id = UUID()
-    let image: String
-    let title: String
-    let quantity: Int
-    let price: Double
-}
-
-struct ShippingOption: Identifiable {
-    let id = UUID()
-    let type: String
-    let duration: String
-    let price: Double?
-}
-
-struct PaymentDetails {
-    var shippingAddress: String
-    var contactNumber: String
-    var email: String
-    var items: [PaymentItem]
-    var selectedShippingOption: ShippingOption?
-    var discount: Int = 5
-}
-
-// MARK: - View
 struct PaymentScreen: View {
     @State var flag:String = ""
     @State var productId:String = ""
-    @State private var addressData:Address? = nil
-    @State private var ProductData:ProductDetail? = nil
+    @State var quantity = 1
+    @State var selectedSize: String = ""
+    @State private var addressData: Address? = nil
+    @State private var ProductData: ProductDetail? = nil
     @Environment(\.presentationMode) var presentationMode
-    @State private var showingPaymentSheet = false
+    @State private var totalPrice = 0.0
+    @State private var previousDeliveryPrice: Double = 0.0
     @State private var selectedDeliveryOption: String? = nil
     @State private var showingAddressSheet = false
+    @State private var cartData : [CartListProduct] = []
     
-    init(flag: String, productId: String) {
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var showPopup = false
+    
+    init(flag: String, productId: String, quantity: Int,selectedSize:String) {
         _flag = State(initialValue: flag)
         _productId = State(initialValue: productId)
+        _quantity = State(initialValue: quantity)
+        _selectedSize = State(initialValue: selectedSize)
     }
     
-    private func getData()async{
-        do{
+    private func getData() async {
+        do {
             let addressRes = try await GetAddres()
-            let productRes = try await GetProductById(id: productId)
-            guard addressRes.status == "success" && productRes.status == "success" else {
-                return
+            if flag == "cart" {
+                let res = try await GetCartList()
+                guard res.status == "success" else {
+                    print("Error: Failed to fetch one or more data")
+                    return
+                }
+                cartData = res.data ?? []
+                totalPrice = res.totalPrice
+            } else {
+                let productRes = try await GetProductById(id: productId)
+                guard addressRes.status == "success" && productRes.status == "success" else {
+                    return
+                }
+                ProductData = productRes.data
+                if let price = productRes.data?.price {
+                    totalPrice = price * Double(quantity)
+                }
             }
             addressData = addressRes.data
-            ProductData = productRes.data
-        }catch{
+        } catch {
             print(error)
         }
     }
     
+    private func updateTotalPrice(deliveryPrice: Int) {
+        if flag == "cart" {
+            totalPrice = totalPrice - previousDeliveryPrice + Double(deliveryPrice)
+        } else {
+            totalPrice = (ProductData?.price ?? 0.0) * Double(quantity) + Double(deliveryPrice)
+        }
+        previousDeliveryPrice = Double(deliveryPrice)
+    }
+    
+    private func validateAndProceed()async {
+        if addressData == nil {
+            alertMessage = "Please provide a shipping address."
+            showAlert = true
+            return
+        }
+        if selectedDeliveryOption == nil {
+            alertMessage = "Please select a delivery option."
+            showAlert = true
+            return
+        }
+        do {
+            if flag == "cart"{
+                let _ = try await PlaceCartOrder()
+                
+            }else{
+                let id  = selectedDeliveryOption == "Standard" ? 1 : 2
+                let order = OrderRequest(productID: productId, quantity: quantity, size: selectedSize,deliveryID: id)
+                let res = try await PlaceSingleOrder(order: order)
+                print(res)
+            }
+        }catch{
+            print(error)
+        }
+        showPopup = true
+        print("Proceeding to payment...")
+    }
+    
     var body: some View {
-        VStack{
-            HStack{
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.black)
+        ZStack {
+            VStack {
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                    }
+                    Text("Payment")
+                        .font(.system(size: 27, weight: .bold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                Text("Payment")
-                    .font(.system(size: 27, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }.padding(.leading,10)
-           
-            ZStack{
-                ScrollView(showsIndicators: false){
-                    VStack(spacing: 20){
+                .padding(.leading, 10)
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
                         HStack {
                             if let address = addressData {
                                 VStack(alignment: .leading, spacing: 0) {
@@ -100,7 +135,13 @@ struct PaymentScreen: View {
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
-                        ItemsSection(items: $ProductData)
+                        
+                        if flag == "cart" {
+                            PaymentCartSectioon(items: $cartData)
+                        } else {
+                            PaymentItemsSection(items: $ProductData, quantity: $quantity)
+                        }
+                        
                         VStack(spacing: 10) {
                             DeliveryOptionView(
                                 title: "Standard",
@@ -109,7 +150,9 @@ struct PaymentScreen: View {
                                 isSelected: selectedDeliveryOption == "Standard"
                             ) {
                                 selectedDeliveryOption = "Standard"
+                                updateTotalPrice(deliveryPrice: 20)
                             }
+                            
                             DeliveryOptionView(
                                 title: "Express",
                                 duration: "1-2 days",
@@ -117,24 +160,27 @@ struct PaymentScreen: View {
                                 isSelected: selectedDeliveryOption == "Express"
                             ) {
                                 selectedDeliveryOption = "Express"
+                                updateTotalPrice(deliveryPrice: 30)
                             }
                         }
-                    }.padding(10)
+                    }
+                    .padding(10)
                 }
-                Spacer()
+                
                 VStack {
-                    Spacer()
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Total")
                                 .foregroundColor(.gray)
-                            Text("$\(String(format: "%.2f", 33.22))")
+                            Text("$\(String(format: "%.2f", totalPrice))")
                                 .font(.title2)
                                 .fontWeight(.bold)
                         }
                         Spacer()
                         Button(action: {
-                            
+                            Task{
+                                await  validateAndProceed()
+                            }
                         }) {
                             Text("Pay")
                                 .fontWeight(.semibold)
@@ -149,8 +195,16 @@ struct PaymentScreen: View {
                     .shadow(radius: 2)
                 }
             }
-        }.onAppear(){
-            Task(){
+            
+            if showPopup {
+                Color.black
+                    .opacity(0.4)
+                    .ignoresSafeArea()
+                SuccessPopup(isPresented: $showPopup)
+            }
+        }
+        .onAppear {
+            Task {
                 await getData()
             }
         }
@@ -158,77 +212,11 @@ struct PaymentScreen: View {
         .sheet(isPresented: $showingAddressSheet) {
             AddressEditSheet(address: $addressData, isProfile: false)
         }
-        
-    }
-}
-
-
-struct ItemsSection: View {
-    @Binding var items: ProductDetail?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if let items = items {
-                HStack {
-                    Text("Products")
-                        .font(.headline)
-                    Text("1")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue)
-                        .clipShape(Circle())
-                }
-                
-                HStack(spacing: 12) {
-                    if let url = URL(string: items.image) {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .frame(width: 60, height: 60)
-                                .cornerRadius(10)
-                        } placeholder: {
-                            ProgressView()
-                                .frame(width: 30, height: 30)
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(items.name)
-                            .font(.subheadline)
-                        Text("Quantity: \(2)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    
-                    Text("$\(String(format: "%.2f", items.price))")
-                        .font(.headline)
-                }
-            } else {
-                Text("No products available")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-            }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(radius: 2)
     }
 }
-
-let paymentDetails = PaymentDetails(
-    shippingAddress: "Magadi Main Rd, next to Prasanna Theatre, Cholourpalya, Bengaluru, Karnataka 560023",
-    contactNumber: "+91987654321",
-    email: "gmail@example.com",
-    items: [
-        PaymentItem(image: "item1", title: "Lorem ipsum dolor sit amet consectetur.", quantity: 1, price: 17.00),
-        PaymentItem(image: "item2", title: "Lorem ipsum dolor sit amet consectetur.", quantity: 1, price: 17.00)
-    ],
-    selectedShippingOption: nil
-)
-
 #Preview {
-    PaymentScreen(flag: "", productId: "asdasd")
+    PaymentScreen(flag: "", productId: "asdasd",quantity:1,selectedSize: "L")
 }

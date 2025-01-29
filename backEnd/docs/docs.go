@@ -813,11 +813,15 @@ const docTemplate = `{
         "models.OrderRequest": {
             "type": "object",
             "required": [
+                "deliveryID",
                 "productID",
                 "quantity",
                 "size"
             ],
             "properties": {
+                "deliveryID": {
+                    "type": "integer"
+                },
                 "productID": {
                     "type": "string"
                 },

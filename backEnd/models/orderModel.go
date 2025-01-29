@@ -1,9 +1,10 @@
 package models
 
 type OrderRequest struct {
-	ProductID string `json:"productID" binding:"required"`
-	Size      string `json:"size" binding:"required" example:"S M L XL XXL XXXL"`
-	Quantity  int    `json:"quantity" binding:"required"`
+	ProductID  string `json:"productID" binding:"required"`
+	Size       string `json:"size" binding:"required" example:"S M L XL XXL XXXL"`
+	Quantity   int    `json:"quantity" binding:"required"`
+	DeliveryID int    `json:"deliveryID" binding:"required"`
 }
 
 type MultiOrderRequest struct {

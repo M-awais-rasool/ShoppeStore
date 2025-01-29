@@ -67,12 +67,9 @@ struct AddressEditSheet: View {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
                         }) {
-                            Image(systemName: "arrow.backward")
-                                .font(.system(size: 15))
-                                .foregroundColor(.white)
-                                .padding(6)
-                                .background(Color.blue)
-                                .clipShape(Circle())
+                            Image(systemName: "chevron.left")
+                                .font(.title2)
+                                .foregroundColor(.black)
                         }
                     } else {
                         Image(systemName: "xmark.circle.fill")

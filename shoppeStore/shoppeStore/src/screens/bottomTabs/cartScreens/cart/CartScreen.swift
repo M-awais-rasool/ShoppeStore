@@ -82,133 +82,133 @@ struct CartScreen: View {
         }
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading) {
-                Text("Cart")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.horizontal)
-                    .padding(.bottom,5)
-            }
-            
-            ZStack {
-                ScrollView (showsIndicators: false){
-                    VStack(alignment: .leading, spacing: 20) {
-                        HStack {
-                            if let address = addressData {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Text("\(address.address), \(address.apartment), \(address.city), \(address.district)")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                    Text("\(address.name)\n\(address.phone)")
+        NavigationView{
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading) {
+                    Text("Cart")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                        .padding(.bottom,5)
+                }
+                
+                ZStack {
+                    ScrollView (showsIndicators: false){
+                        VStack(alignment: .leading, spacing: 20) {
+                            HStack {
+                                if let address = addressData {
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text("\(address.address), \(address.apartment), \(address.city), \(address.district)")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                        Text("\(address.name)\n\(address.phone)")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                    }
+                                } else {
+                                    Text("No address data available.")
                                         .font(.subheadline)
                                         .foregroundColor(.gray)
                                 }
-                            } else {
-                                Text("No address data available.")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                                Spacer()
+                                Button(action: { showingAddressSheet = true }) {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.blue)
+                                        .padding(8)
+                                        .background(Color.blue.opacity(0.1))
+                                        .clipShape(Circle())
+                                }
                             }
-                            Spacer()
-                            Button(action: { showingAddressSheet = true }) {
-                                Image(systemName: "pencil")
-                                    .foregroundColor(.blue)
-                                    .padding(8)
-                                    .background(Color.blue.opacity(0.1))
-                                    .clipShape(Circle())
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            
+                            if cartData.isEmpty{
+                                EmptyTextSection(text: "Your wishlist is empty")
+                            }else{
+                                ForEach($cartData, id: \.productID) { $item in
+                                    CartListCard(
+                                        item: $item,
+                                        onDelete: {
+                                            Task {
+                                                await removeToCart(id: item.productID)
+                                            }
+                                        },
+                                        onQuantityChange: { newQuantity in
+                                            Task {
+                                                updateCartQuantity(productId: item.productID, newQuantity: newQuantity)
+                                            }
+                                        }
+                                    )
+                                }
                             }
+                            
+                            Text("From Your Wishlist")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.bottom,-10)
+                            if wishlistItems.isEmpty{
+                                EmptyTextSection(text: "Your Cart is empty")
+                            }else {
+                                ForEach(wishlistItems) { item in
+                                    WishListCards(
+                                        item: item,
+                                        onRemoveSuccess: {
+                                            if let index = wishlistItems.firstIndex(where: { $0.productID == item.productID }) {
+                                                wishlistItems.remove(at: index)
+                                            }
+                                        },
+                                        onAddToCart: {
+                                            Task {
+                                                await addToCartApi(item: item)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                            
+                            
+                            Color.clear.frame(height: 80)
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                        
-                        if cartData.isEmpty{
-                            EmptyTextSection(text: "Your wishlist is empty")
-                        }else{
-                            ForEach($cartData, id: \.productID) { $item in
-                                CartListCard(
-                                    item: $item,
-                                    onDelete: {
-                                        Task {
-                                            await removeToCart(id: item.productID)
-                                        }
-                                    },
-                                    onQuantityChange: { newQuantity in
-                                        Task {
-                                            updateCartQuantity(productId: item.productID, newQuantity: newQuantity)
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                        
-                        Text("From Your Wishlist")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.bottom,-10)
-                        if wishlistItems.isEmpty{
-                            EmptyTextSection(text: "Your Cart is empty")
-                        }else {
-                            ForEach(wishlistItems) { item in
-                                WishListCards(
-                                    item: item,
-                                    onRemoveSuccess: {
-                                        if let index = wishlistItems.firstIndex(where: { $0.productID == item.productID }) {
-                                            wishlistItems.remove(at: index)
-                                        }
-                                    },
-                                    onAddToCart: {
-                                        Task {
-                                            await addToCartApi(item: item)
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                        
-                        
-                        Color.clear.frame(height: 80)
+                        .padding(.horizontal, 10)
                     }
-                    .padding(.horizontal, 10)
-                }
-                if !cartData.isEmpty{
-                    VStack {
-                        Spacer()
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Total")
-                                    .foregroundColor(.gray)
-                                Text("$\(String(format: "%.2f", TotalPrice))")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                            }
+                    if !cartData.isEmpty{
+                        VStack {
                             Spacer()
-                            Button(action: {
-                                
-                            }) {
-                                Text("Checkout")
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(width: 120, height: 44)
-                                    .background(Color.blue)
-                                    .cornerRadius(22)
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("Total")
+                                        .foregroundColor(.gray)
+                                    Text("$\(String(format: "%.2f", TotalPrice))")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                }
+                                Spacer()
+                                NavigationLink(destination: PaymentScreen(flag: "cart",productId: "",quantity: 0,selectedSize: "L"), label: {
+                                    Text("Checkout")
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
+                                        .frame(width: 120, height: 44)
+                                        .background(Color.blue)
+                                        .cornerRadius(22)
+                                })
                             }
+                            .padding(10)
+                            .background(Color.white)
+                            .shadow(radius: 2)
                         }
-                        .padding(10)
-                        .background(Color.white)
-                        .shadow(radius: 2)
                     }
                 }
             }
-        }
-        .toast(isShowing: $showToast, message: toastMessage)
-        .onAppear(){
-            Task{
-                await getData()
+            .toast(isShowing: $showToast, message: toastMessage)
+            .onAppear(){
+                Task{
+                    await getData()
+                }
             }
-        }
-        .sheet(isPresented: $showingAddressSheet) {
-            AddressEditSheet(address: $addressData, isProfile: false)
+            .sheet(isPresented: $showingAddressSheet) {
+                AddressEditSheet(address: $addressData, isProfile: false)
+            }
         }
     }
 }

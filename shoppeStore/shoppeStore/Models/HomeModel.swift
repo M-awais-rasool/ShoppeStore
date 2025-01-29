@@ -132,3 +132,47 @@ struct ProductDetail:Codable,Identifiable{
     var isWishList :Bool
 }
 
+// order struct
+struct OrderRequest: Codable {
+    let productID: String
+    let quantity: Int
+    let size: String
+    let deliveryID: Int
+}
+
+struct OrderRes : Codable{
+    let status:String
+    let orderID:String
+}
+
+//get order stucrt
+struct Orders: Codable {
+    let status: String
+    let data: [OrderData]?
+}
+
+struct OrderData: Identifiable, Codable {
+    let id: String
+    let orderID: String
+    let products: [OrderNestedData]
+    let status: String
+    let DeliveryStatus:String
+    let totalPrice: Double
+}
+
+struct OrderNestedData: Identifiable, Codable {
+    let id: String
+    let image: String
+    let name: String
+    let price: Double
+    let quantity: Int
+    let size: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "productID"
+        case image, name, price, quantity, size
+    }
+}
+
+
+
