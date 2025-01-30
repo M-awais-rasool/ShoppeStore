@@ -69,9 +69,9 @@ func emailCheckAPi(body: [String: Any]) async throws -> EmailRes {
 }
 
 
-func AddFromWishList(productId: String) async throws -> ErrorResponse {
+func AddFromWishList(productId: String,size:String) async throws -> ErrorResponse {
     do {
-        guard let url = URL(string: "http://localhost:8080/WishList/add-wishList\(productId)") else {
+        guard let url = URL(string: "http://localhost:8080/WishList/add-wishList\(productId)?size=\(size)") else {
             throw APIError.invalidURL
         }
         guard let token = getToken() else {
@@ -99,9 +99,9 @@ func AddFromWishList(productId: String) async throws -> ErrorResponse {
     }
 }
 
-func AddToCart(productId: String,quantity:Int) async throws -> ErrorResponse {
+func AddToCart(productId: String,quantity:Int,size:String) async throws -> ErrorResponse {
     do {
-        guard let url = URL(string: "http://localhost:8080/Cart/add-to-cart\(productId)?quantity=\(quantity)") else {
+        guard let url = URL(string: "http://localhost:8080/Cart/add-to-cart\(productId)?size=\(size)&quantity=\(quantity)") else {
             throw APIError.invalidURL
         }
         guard let token = getToken() else {
@@ -130,9 +130,9 @@ func AddToCart(productId: String,quantity:Int) async throws -> ErrorResponse {
 }
 
 
-func PlaceCartOrder() async throws -> OrderRes {
+func PlaceCartOrder(deliveryId:Int) async throws -> OrderRes {
     do {
-        guard let url = URL(string: "http://localhost:8080/Orders/place-cart-order") else {
+        guard let url = URL(string: "http://localhost:8080/Orders/place-cart-order?deliveryId=\(deliveryId)") else {
             throw APIError.invalidURL
         }
         guard let token = getToken() else {
@@ -188,6 +188,38 @@ func PlaceSingleOrder(order: OrderRequest) async throws -> OrderRes {
             throw APIError.serverError(message: errorResponse.message)
         }
         return try decoder.decode(OrderRes.self, from: data)
+    } catch {
+        throw error
+    }
+}
+
+func GetOrderStatus(order: OrderStatusRequest) async throws -> OrderStatusRes {
+    do {
+        guard let url = URL(string: "http://localhost:8080/Orders/get-order-status") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let encoder = JSONEncoder()
+        request.httpBody = try encoder.encode(order)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        let decoder = JSONDecoder()
+        if httpResponse.statusCode != 200 {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+        return try decoder.decode(OrderStatusRes.self, from: data)
     } catch {
         throw error
     }

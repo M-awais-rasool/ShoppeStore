@@ -14,6 +14,14 @@ definitions:
       phone:
         type: string
     type: object
+  models.ChangeStatus:
+    properties:
+      orderID:
+        type: string
+      status:
+        example: Confirmed, Packed, Shipped, Delivered
+        type: string
+    type: object
   models.EmailSignIn:
     description: Model for user registration
     properties:
@@ -38,6 +46,11 @@ definitions:
     - productID
     - quantity
     - size
+    type: object
+  models.OrderStatus:
+    properties:
+      orderID:
+        type: string
     type: object
   models.UserSignIn:
     description: Model for user registration
@@ -202,6 +215,11 @@ paths:
         name: productID
         required: true
         type: string
+      - description: Size of the product (S, M, L, XL, XXL, XXXL)
+        in: query
+        name: size
+        required: true
+        type: string
       - description: Quantity to add
         in: query
         minimum: 1
@@ -214,7 +232,7 @@ paths:
         "200":
           description: Success
         "400":
-          description: Insufficient product quantity
+          description: Invalid size or insufficient product quantity
         "401":
           description: Unauthorized - Token missing or invalid
         "404":
@@ -272,6 +290,104 @@ paths:
       summary: Remove product from user's cart
       tags:
       - Cart
+  /Orders/change-order-status:
+    post:
+      consumes:
+      - application/json
+      description: Change the status of a specific order
+      parameters:
+      - description: Order ID and New Status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangeStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Invalid input data
+        "401":
+          description: Unauthorized
+        "404":
+          description: Order not found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Change Order Status
+      tags:
+      - Orders
+  /Orders/get-active-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get all active orders (not delivered or canceled)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get Active Orders
+      tags:
+      - Orders
+  /Orders/get-canceled-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get all canceled orders
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get Canceled Orders
+      tags:
+      - Orders
+  /Orders/get-order-status:
+    post:
+      consumes:
+      - application/json
+      description: Get the status of a specific order
+      parameters:
+      - description: Order ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.OrderStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Invalid input data
+        "401":
+          description: Unauthorized
+        "404":
+          description: Order not found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get Order Status
+      tags:
+      - Orders
   /Orders/get-user-orders:
     get:
       consumes:
@@ -298,6 +414,12 @@ paths:
       consumes:
       - application/json
       description: Places orders for all items in user's cart
+      parameters:
+      - description: Delivery ID (1 for Standard, 2 for Express)
+        in: query
+        name: deliveryId
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -472,6 +594,11 @@ paths:
       - description: Product ID
         in: path
         name: productID
+        required: true
+        type: string
+      - description: Size of the product (S, M, L, XL, XXL, XXXL)
+        in: query
+        name: size
         required: true
         type: string
       produces:

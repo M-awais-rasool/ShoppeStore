@@ -23,7 +23,7 @@ struct ProductDetailSheet: View {
         do {
             let result = try await wishList
             ? RemoveFromWishList(productId: ProductID)
-            : AddFromWishList(productId: ProductID)
+            : AddFromWishList(productId: ProductID,size:selectedSize)
             print(result)
             if result.status == "success" {
                 wishList.toggle()
@@ -35,7 +35,7 @@ struct ProductDetailSheet: View {
     
     private func addToCartApi()async{
         do {
-            let res = try await AddToCart(productId: ProductID, quantity: quantity)
+            let res = try await AddToCart(productId: ProductID, quantity: quantity,size:selectedSize)
             print(res)
             if res.status == "success" {
                 toastMessage = res.message

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SuccessPopup: View {
     @Binding var isPresented: Bool
+    @Binding var navigateToNextScreen:Bool
     @State private var checkmarkOffset: CGFloat = 30
     @State private var checkmarkScale: CGFloat = 0
     @State private var textOpacity: Double = 0
@@ -58,6 +59,7 @@ struct SuccessPopup: View {
             Button(action: {
                 withAnimation(.spring(response: 0.5)) {
                     isPresented = false
+                    navigateToNextScreen = true
                 }
             }) {
                 Text("Track My Order")
@@ -95,7 +97,7 @@ struct SuccessPopup_Previews: PreviewProvider {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
             
-            SuccessPopup(isPresented: .constant(true))
+            SuccessPopup(isPresented: .constant(true),navigateToNextScreen: .constant(false))
         }
     }
 }

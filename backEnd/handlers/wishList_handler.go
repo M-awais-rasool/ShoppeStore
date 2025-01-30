@@ -19,6 +19,7 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Param productID path string true "Product ID"
+// @Param size query string true "Size of the product (S, M, L, XL, XXL, XXXL)"
 // @Success 200 "Success"
 // @Failure 401 "Unauthorized - Token missing or invalid"
 // @Failure 404 "Product not found"
@@ -39,6 +40,19 @@ func AddWishList(c *gin.Context) {
 
 	userID := claim.Subject
 	productID := c.Param("productID")
+	size := c.Query("size")
+
+	validSize := false
+	for _, s := range sizes {
+		if s == size {
+			validSize = true
+			break
+		}
+	}
+	if !validSize {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid size. Must be one of: S, M, L, XL, XXL, XXXL"})
+		return
+	}
 
 	var product models.Product
 	productQuery := `SELECT id, name, image, description, price FROM products WHERE id = ?`
@@ -52,8 +66,8 @@ func AddWishList(c *gin.Context) {
 	}
 
 	id := uuid.NewString()
-	wishlistQuery := `INSERT INTO wishlist (id, userID, productID, image, name, price) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err = database.DB.Exec(wishlistQuery, id, userID, product.ID, product.Image, product.Name, product.Price)
+	wishlistQuery := `INSERT INTO wishlist (id, userID, productID, image, name, price, size) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	_, err = database.DB.Exec(wishlistQuery, id, userID, product.ID, product.Image, product.Name, product.Price, size)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to add to wishlist"})
@@ -155,7 +169,7 @@ func GetWishList(c *gin.Context) {
 
 	userID := claim.Subject
 
-	wishlistQuery := `SELECT id, productID, image, name, price FROM wishlist WHERE userID = ?`
+	wishlistQuery := `SELECT id, productID, image, name, price, size FROM wishlist WHERE userID = ?`
 	rows, err := database.DB.Query(wishlistQuery, userID)
 	if err != nil {
 		log.Println(err)
@@ -167,7 +181,7 @@ func GetWishList(c *gin.Context) {
 	var wishList []models.WishList
 	for rows.Next() {
 		var wish models.WishList
-		err := rows.Scan(&wish.ID, &wish.ProductID, &wish.Image, &wish.Name, &wish.Price)
+		err := rows.Scan(&wish.ID, &wish.ProductID, &wish.Image, &wish.Name, &wish.Price, &wish.Size)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch wishlist"})
 			return

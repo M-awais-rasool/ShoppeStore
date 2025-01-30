@@ -72,7 +72,7 @@ struct WishListCards: View {
                     .fontWeight(.semibold)
                 
                 HStack(spacing: 8) {
-                    Text("M")
+                    Text(item.size)
                         .font(.caption)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)

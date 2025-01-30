@@ -35,7 +35,11 @@ func SetRoutes() *gin.Engine {
 
 	router.POST("Orders/place-single-order", handlers.PlaceSingleOrder)
 	router.POST("Orders/place-cart-order", handlers.PlaceCartOrder)
+	router.POST("Orders/get-order-status", handlers.GetOrderStatus)
+	router.POST("Orders/change-order-status", handlers.ChangeOrderStatus)
 	router.GET("Orders/get-user-orders", handlers.GetOrders)
+	router.GET("Orders/get-active-orders", handlers.GetActiveOrder)
+	router.GET("Orders/get-canceled-orders", handlers.GetCanceledOrder)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router

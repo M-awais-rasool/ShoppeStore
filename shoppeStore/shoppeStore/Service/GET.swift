@@ -265,3 +265,57 @@ func GetOrders()async throws -> Orders {
         throw error
     }
 }
+
+func GetActiveOrders()async throws -> Orders {
+    do{
+        guard let url = URL(string: "http://localhost:8080/Orders/get-active-orders") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data,response) = try await URLSession.shared.data(for: request)
+        let decoder = JSONDecoder()
+        
+        guard let htttpResponse = response as? HTTPURLResponse, htttpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        return try decoder.decode(Orders.self, from: data)
+    }catch{
+        print("Error: \(error.localizedDescription)")
+        throw error
+    }
+}
+
+func GetCanceledOrders()async throws -> Orders {
+    do{
+        guard let url = URL(string: "http://localhost:8080/Orders/get-canceled-orders") else {
+            throw APIError.invalidURL
+        }
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data,response) = try await URLSession.shared.data(for: request)
+        let decoder = JSONDecoder()
+        
+        guard let htttpResponse = response as? HTTPURLResponse, htttpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        return try decoder.decode(Orders.self, from: data)
+    }catch{
+        print("Error: \(error.localizedDescription)")
+        throw error
+    }
+}

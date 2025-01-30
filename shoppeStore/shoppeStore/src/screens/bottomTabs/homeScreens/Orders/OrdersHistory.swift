@@ -2,6 +2,21 @@ import SwiftUI
 
 struct OrderTrackingView: View {
     let order: OrderData
+    private var isOrderComplete: Bool {
+        let status = order.status.lowercased()
+        return status == "canceled" || status == "delivered"
+    }
+    
+    private var buttonColor: Color {
+        switch order.status.lowercased() {
+        case "canceled":
+            return .red
+        case "delivered":
+            return .blue
+        default:
+            return .blue
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading,spacing: 0) {
@@ -45,15 +60,23 @@ struct OrderTrackingView: View {
                     .foregroundColor(.blue)
                 
                 Spacer()
-                Button("Track") {
-                    
-                }
-                .padding(.vertical,4)
-                .padding(.horizontal,12)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
+                if isOrderComplete {
+                    Text(order.status)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 15)
+                        .background(buttonColor)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                } else {
+                    NavigationLink(destination: OrderTracking(OrderId: order.orderID)) {
+                        Text("Track")
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 15)
+                            .background(buttonColor)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                }            }
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.white).shadow(radius: 2))
@@ -61,12 +84,13 @@ struct OrderTrackingView: View {
 }
 
 struct OrdersHistory: View {
+    @State var flag :String = ""
     @State private var orders: [OrderData] = []
     @Environment(\.presentationMode) var presentationMode
     
     func GetData() async {
         do {
-            let res = try await GetOrders()
+            let res = try await flag == "History" ? GetOrders() : flag == "Active" ? GetActiveOrders() : GetCanceledOrders()
             orders = res.data ?? []
         } catch {
             print("Error fetching orders:", error.localizedDescription)
@@ -84,7 +108,7 @@ struct OrdersHistory: View {
                         .font(.title2)
                         .foregroundColor(.black)
                 }
-                Text("Order History")
+                Text(flag == "History" ? "Order History" : flag ==  "Active" ? "Active Orders" : "Returns")
                     .font(.title2)
                     .bold()
             }

@@ -13,6 +13,8 @@ struct PaymentScreen: View {
     @State private var selectedDeliveryOption: String? = nil
     @State private var showingAddressSheet = false
     @State private var cartData : [CartListProduct] = []
+    @State private var OrderId :String = ""
+    @State private var navigateToNextScreen = false
     
     @State private var showAlert = false
     @State private var alertMessage = ""
@@ -61,32 +63,32 @@ struct PaymentScreen: View {
         previousDeliveryPrice = Double(deliveryPrice)
     }
     
-    private func validateAndProceed()async {
-        if addressData == nil {
+    private func validateAndProceed() async {
+        guard let _ = addressData else {
             alertMessage = "Please provide a shipping address."
             showAlert = true
             return
         }
-        if selectedDeliveryOption == nil {
+        guard let selectedOption = selectedDeliveryOption else {
             alertMessage = "Please select a delivery option."
             showAlert = true
             return
         }
+        let deliveryId = (selectedOption == "Standard") ? 1 : 2
         do {
-            if flag == "cart"{
-                let _ = try await PlaceCartOrder()
-                
-            }else{
-                let id  = selectedDeliveryOption == "Standard" ? 1 : 2
-                let order = OrderRequest(productID: productId, quantity: quantity, size: selectedSize,deliveryID: id)
-                let res = try await PlaceSingleOrder(order: order)
-                print(res)
+            let res = flag == "cart"
+            ? try await PlaceCartOrder(deliveryId: deliveryId)
+            : try await PlaceSingleOrder(order: OrderRequest(productID: productId, quantity: quantity, size: selectedSize, deliveryID: deliveryId))
+            
+            if !res.status.isEmpty {
+                OrderId = res.orderID
+                showPopup = true
             }
-        }catch{
-            print(error)
+        } catch {
+            print("Order Failed: \(error.localizedDescription)")
+            alertMessage = "Something went wrong. Please try again."
+            showAlert = true
         }
-        showPopup = true
-        print("Proceeding to payment...")
     }
     
     var body: some View {
@@ -200,7 +202,7 @@ struct PaymentScreen: View {
                 Color.black
                     .opacity(0.4)
                     .ignoresSafeArea()
-                SuccessPopup(isPresented: $showPopup)
+                SuccessPopup(isPresented: $showPopup,navigateToNextScreen:$navigateToNextScreen)
             }
         }
         .onAppear {
@@ -214,6 +216,9 @@ struct PaymentScreen: View {
         }
         .alert(isPresented: $showAlert) {
             Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
+        .navigationDestination(isPresented: $navigateToNextScreen){
+            OrderTracking(OrderId:OrderId)
         }
     }
 }

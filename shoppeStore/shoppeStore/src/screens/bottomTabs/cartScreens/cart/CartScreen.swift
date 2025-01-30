@@ -31,7 +31,7 @@ struct CartScreen: View {
     
     private func addToCartApi(item: wishListProduct) async {
         do {
-            let res = try await AddToCart(productId: item.productID, quantity: 1)
+            let res = try await AddToCart(productId: item.productID, quantity: 1,size: item.size)
             if res.status == "success" {
                 if let index = cartData.firstIndex(where: { $0.productID == item.productID }) {
                     cartData[index].quantity += 1
@@ -44,7 +44,8 @@ struct CartScreen: View {
                         image: item.image,
                         quantity: 1,
                         price: item.price,
-                        totalPrice: item.price
+                        totalPrice: item.price,
+                        size: item.size
                     )
                     cartData.append(newProduct)
                 }

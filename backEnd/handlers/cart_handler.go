@@ -22,11 +22,12 @@ import (
 // @Produce json
 // @Security BearerAuth
 // @Param productID path string true "Product ID"
+// @Param size query string true "Size of the product (S, M, L, XL, XXL, XXXL)"
 // @Param quantity query int true "Quantity to add" minimum(1)
 // @Success 200 "Success"
 // @Failure 401 "Unauthorized - Token missing or invalid"
 // @Failure 404 "Product not found"
-// @Failure 400 "Insufficient product quantity"
+// @Failure 400 "Invalid size or insufficient product quantity"
 // @Failure 500 "Internal server error"
 // @Router /Cart/add-to-cart{productID} [post]
 func AddToCart(c *gin.Context) {
@@ -44,6 +45,19 @@ func AddToCart(c *gin.Context) {
 
 	userID := claim.Subject
 	productID := c.Param("productID")
+	size := c.Query("size")
+
+	validSize := false
+	for _, s := range sizes {
+		if s == size {
+			validSize = true
+			break
+		}
+	}
+	if !validSize {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid size. Must be one of: S, M, L, XL, XXL, XXXL"})
+		return
+	}
 
 	quantityStr := c.Query("quantity")
 	quantity, err := strconv.Atoi(quantityStr)
@@ -66,8 +80,8 @@ func AddToCart(c *gin.Context) {
 	}
 
 	var cartQuantity int
-	cartQuery := `SELECT quantity FROM Cart WHERE userID = ? AND productID = ?`
-	err = database.DB.QueryRow(cartQuery, userID, productID).Scan(&cartQuantity)
+	cartQuery := `SELECT quantity FROM Cart WHERE userID = ? AND productID = ? AND size = ?`
+	err = database.DB.QueryRow(cartQuery, userID, productID, size).Scan(&cartQuantity)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Database error"})
 		return
@@ -87,8 +101,8 @@ func AddToCart(c *gin.Context) {
 	}
 
 	if cartQuantity > 0 {
-		updateCartQuery := `UPDATE Cart SET quantity = ? WHERE userID = ? AND productID = ?`
-		_, err = database.DB.Exec(updateCartQuery, newQuantity, userID, productID)
+		updateCartQuery := `UPDATE Cart SET quantity = ? WHERE userID = ? AND productID = ? AND size = ?`
+		_, err = database.DB.Exec(updateCartQuery, newQuantity, userID, productID, size)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to update cart"})
@@ -96,8 +110,8 @@ func AddToCart(c *gin.Context) {
 		}
 	} else {
 		id := uuid.NewString()
-		insertCartQuery := `INSERT INTO Cart (id, userID, productID, quantity) VALUES (?, ?, ?, ?)`
-		_, err = database.DB.Exec(insertCartQuery, id, userID, productID, quantity)
+		insertCartQuery := `INSERT INTO Cart (id, userID, productID, quantity, size) VALUES (?, ?, ?, ?, ?)`
+		_, err = database.DB.Exec(insertCartQuery, id, userID, productID, quantity, size)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to add to cart"})
@@ -183,7 +197,7 @@ func GetCartItems(c *gin.Context) {
 
 	userID := claim.Subject
 
-	cartQuery := `SELECT c.id, c.productID, p.name, p.image, p.description, c.quantity, p.price
+	cartQuery := `SELECT c.id, c.productID, c.size, p.name, p.image, p.description, c.quantity, p.price
                   FROM Cart c
                   JOIN products p ON c.productID = p.id
                   WHERE c.userID = ?`
@@ -198,7 +212,7 @@ func GetCartItems(c *gin.Context) {
 	var overallTotalPrice float32
 	for rows.Next() {
 		var item models.CartItem
-		err := rows.Scan(&item.ID, &item.ProductID, &item.Name, &item.Image, &item.Description, &item.Quantity, &item.Price)
+		err := rows.Scan(&item.ID, &item.ProductID, &item.Size, &item.Name, &item.Image, &item.Description, &item.Quantity, &item.Price)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to scan cart item"})
 			return

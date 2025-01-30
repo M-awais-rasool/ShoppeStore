@@ -43,7 +43,7 @@ struct CartListCard: View {
                     .font(.headline)
                     .bold()
                 
-                Text("Size M")
+                Text("Size \(item.size)")
                     .foregroundColor(.gray)
                 
                 HStack {

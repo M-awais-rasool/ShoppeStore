@@ -18,3 +18,12 @@ type OrderDetail struct {
 	Quantity  int     `json:"quantity" binding:"required"`
 	Price     float64 `json:"price"`
 }
+
+type OrderStatus struct {
+	OrderID string `json:"orderID"`
+}
+
+type ChangeStatus struct {
+	OrderID string `json:"orderID"`
+	Status  string `json:"status" example:"Confirmed, Packed, Shipped, Delivered, Canceled"`
+}

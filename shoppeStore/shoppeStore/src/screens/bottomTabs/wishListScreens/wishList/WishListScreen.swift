@@ -16,9 +16,9 @@ struct WishListScreen: View {
         }
     }
     
-    private func addToCartApi(id:String)async{
+    private func addToCartApi(id:String,size:String)async{
         do {
-            let res = try await AddToCart(productId: id, quantity: 1)
+            let res = try await AddToCart(productId: id, quantity: 1,size: size)
             if res.status == "success" {
                 toastMessage = res.message
                 showToast = true
@@ -59,7 +59,7 @@ struct WishListScreen: View {
                     }
                 },onAddToCart: {
                     Task{
-                        await addToCartApi(id: item.productID)
+                        await addToCartApi(id: item.productID,size:item.size)
                     }
                 })
             }

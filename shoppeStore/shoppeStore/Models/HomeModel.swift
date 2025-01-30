@@ -57,6 +57,7 @@ struct wishListProduct: Identifiable, Decodable {
     let name: String
     let price: Double
     let image: String
+    let size:String
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -64,6 +65,7 @@ struct wishListProduct: Identifiable, Decodable {
         case name
         case price = "Price"
         case image
+        case size
     }
 }
 
@@ -82,6 +84,7 @@ struct CartListProduct: Identifiable, Decodable {
     var quantity: Int
     var price: Double
     var totalPrice: Double
+    var size :String
 }
 
 //address screen
@@ -174,5 +177,7 @@ struct OrderNestedData: Identifiable, Codable {
     }
 }
 
-
-
+struct OrderStatusRes:Codable{
+    let status:String
+    let orderStatus:String
+}

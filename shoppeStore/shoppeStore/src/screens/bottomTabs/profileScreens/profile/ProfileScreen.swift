@@ -22,15 +22,15 @@ struct ProfileScreen: View {
                         }
                         
                         SettingsSectionView(title: "Orders") {
-                            NavigationLink(destination: OrdersHistory()) {
+                            NavigationLink(destination: OrdersHistory(flag:"History")) {
                                 SettingsRow(title: "Order History", icon: "clock.fill", iconColor: .orange)
                             }
-                            //                            NavigationLink(destination: ActiveOrders()) {
-                            SettingsRow(title: "Active Orders", icon: "shippingbox.fill", iconColor: .blue)
-                            //                            }
-                            //                            NavigationLink(destination: Returns()) {
-                            SettingsRow(title: "Returns", icon: "arrow.uturn.left.circle.fill", iconColor: .red)
-                            //                            }
+                            NavigationLink(destination: OrdersHistory(flag:"Active")) {
+                                SettingsRow(title: "Active Orders", icon: "shippingbox.fill", iconColor: .blue)
+                            }
+                            NavigationLink(destination: OrdersHistory(flag:"Returns")) {
+                                SettingsRow(title: "Returns", icon: "arrow.uturn.left.circle.fill", iconColor: .red)
+                            }
                         }
                         
                         SettingsSectionView(title: "Account") {
