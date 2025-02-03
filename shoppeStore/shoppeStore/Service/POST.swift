@@ -38,6 +38,35 @@ func Login(body:[String:Any]) async throws -> LoginResponse{
     }
 }
 
+func createAccount(body:[String:Any])async throws-> ErrorResponse{
+    do{
+        guard let url = URL(string: "http://localhost:8080/Auth/sign-up") else{
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        let decoder = JSONDecoder()
+        if httpResponse.statusCode != 200 {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+        
+        return try decoder.decode(ErrorResponse.self, from: data)
+    }catch{
+        print("Caught APIError: \(error)")
+        throw error
+    }
+}
+
 func emailCheckAPi(body: [String: Any]) async throws -> EmailRes {
     do {
         guard let url = URL(string: "http://localhost:8080/Auth/email-check") else {

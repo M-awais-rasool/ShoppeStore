@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import Photos
+import AVFoundation
 
 struct ImagePicker: UIViewControllerRepresentable {
     var sourceType: UIImagePickerController.SourceType
@@ -37,3 +39,5 @@ struct ImagePicker: UIViewControllerRepresentable {
         }
     }
 }
+
+

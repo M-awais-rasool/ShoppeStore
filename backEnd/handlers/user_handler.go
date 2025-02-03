@@ -166,5 +166,5 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User signed up successfully"})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User signed up successfully"})
 }
