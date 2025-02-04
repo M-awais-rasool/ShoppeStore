@@ -38,32 +38,57 @@ func Login(body:[String:Any]) async throws -> LoginResponse{
     }
 }
 
-func createAccount(body:[String:Any])async throws-> ErrorResponse{
-    do{
-        guard let url = URL(string: "http://localhost:8080/Auth/sign-up") else{
-            throw APIError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw APIError.invalidResponse
-        }
-        
+func createAccount(name: String, email: String, password: String, imageData: Data) async throws -> ErrorResponse {
+    guard let url = URL(string: "http://localhost:8080/Auth/sign-up") else {
+        throw APIError.invalidURL
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    
+    let boundary = UUID().uuidString
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    
+    var body = Data()
+    let lineBreak = "\r\n"
+    
+    func append(_ field: String, _ value: String) {
+        body.append("--\(boundary)\(lineBreak)")
+        body.append("Content-Disposition: form-data; name=\"\(field)\"\(lineBreak)\(lineBreak)")
+        body.append("\(value)\(lineBreak)")
+    }
+    
+    append("name", name)
+    append("email", email)
+    append("password", password)
+    
+    let filename = "image.jpg"
+    body.append("--\(boundary)\(lineBreak)")
+    body.append("Content-Disposition: form-data; name=\"image\"; filename=\"\(filename)\"\(lineBreak)")
+    body.append("Content-Type: image/jpeg\(lineBreak)\(lineBreak)")
+    body.append(imageData)
+    body.append(lineBreak)
+    
+    body.append("--\(boundary)--\(lineBreak)")
+    
+    request.httpBody = body
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
         let decoder = JSONDecoder()
-        if httpResponse.statusCode != 200 {
-            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
-            throw APIError.serverError(message: errorResponse.message)
+        let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+        throw APIError.serverError(message: errorResponse.message)
+    }
+    
+    return try JSONDecoder().decode(ErrorResponse.self, from: data)
+}
+
+extension Data {
+    mutating func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
         }
-        
-        return try decoder.decode(ErrorResponse.self, from: data)
-    }catch{
-        print("Caught APIError: \(error)")
-        throw error
     }
 }
 
@@ -250,6 +275,40 @@ func GetOrderStatus(order: OrderStatusRequest) async throws -> OrderStatusRes {
         }
         return try decoder.decode(OrderStatusRes.self, from: data)
     } catch {
+        throw error
+    }
+}
+
+
+func AddUpdateAddress(body:[String:Any]) async throws -> ErrorResponse {
+    do{
+        guard let url = URL(string: "http://localhost:8080/Address/add-address") else{
+            throw APIError.invalidURL
+        }
+        
+        guard let token = getToken() else {
+            throw APIError.invalidToken
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        let decoder = JSONDecoder()
+        if httpResponse.statusCode != 200 {
+            let errorResponse = try decoder.decode(ErrorResponse.self, from: data)
+            throw APIError.serverError(message: errorResponse.message)
+        }
+        
+        return try decoder.decode(ErrorResponse.self, from: data)
+    }catch{
+        print("Caught APIError: \(error)")
         throw error
     }
 }

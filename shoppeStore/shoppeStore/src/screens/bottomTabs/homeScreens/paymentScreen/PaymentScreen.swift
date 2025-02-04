@@ -212,7 +212,7 @@ struct PaymentScreen: View {
         }
         .navigationBarBackButtonHidden(true)
         .sheet(isPresented: $showingAddressSheet) {
-            AddressEditSheet(address: $addressData, isProfile: false)
+            AddressEditSheet(address: $addressData, isProfile: false,UpdateAddress: getData)
         }
         .alert(isPresented: $showAlert) {
             Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))

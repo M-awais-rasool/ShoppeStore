@@ -5,6 +5,7 @@ struct AddressEditSheet: View {
     @Binding var address: Address?
     var isProfile: Bool
     @Environment(\.presentationMode) var presentationMode
+    var UpdateAddress: () async -> Void
     
     @State private var name: String = ""
     @State private var streetAddress: String = ""
@@ -12,6 +13,7 @@ struct AddressEditSheet: View {
     @State private var city: String = ""
     @State private var district: String = ""
     @State private var phone: String = ""
+    
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
@@ -37,8 +39,10 @@ struct AddressEditSheet: View {
                     Spacer()
                     
                     Button(action: {
-                        saveAddress()
-                        presentationMode.wrappedValue.dismiss()
+                        Task{
+                            await saveAddress()
+                            presentationMode.wrappedValue.dismiss()
+                        }
                     }) {
                         HStack {
                             Text("Save Address")
@@ -94,8 +98,26 @@ struct AddressEditSheet: View {
         !district.isEmpty && !phone.isEmpty
     }
     
-    private func saveAddress() {
-        
+    private func saveAddress()async {
+        do {
+            let body = [
+                "address": streetAddress,
+                "apartment":apartment,
+                "city":city,
+                "district":district,
+                "name":name,
+                "phone":phone
+            ]
+            
+            let res = try await AddUpdateAddress(body: body)
+            if res.status == "success"{
+               await UpdateAddress()
+            }
+            print(res)
+        }
+        catch{
+            print(error)
+        }
     }
     
     private func resetForm() {

@@ -125,7 +125,9 @@ struct SignUpScreen: View {
                 Alert(
                     title: Text("Message"),
                     message: Text(alertMessage),
-                    dismissButton: .default(Text("OK"))
+                    dismissButton: .default(Text("OK")){
+                        dismiss()
+                    }
                 )
             }
             .sheet(isPresented: $isShowingImagePicker) {
@@ -174,22 +176,18 @@ struct SignUpScreen: View {
     }
     
     private func signUp() async {
-        guard let imageData = selectedImage?.jpegData(compressionQuality: 0.5) else { return }
-        
-        let signUpData = [
-            "name": name,
-            "email": email,
-            "password": password,
-            "image": imageData.base64EncodedString()
-        ]
+        guard let image = selectedImage, let imageData = image.jpegData(compressionQuality: 0.5) else {
+            alertMessage = "Please select an image"
+            showAlert = true
+            return
+        }
         
         do {
-            let response = try await createAccount(body: signUpData)
+            let response = try await createAccount(name: name, email: email, password: password, imageData: imageData)
             print(response)
             DispatchQueue.main.async {
                 alertMessage = "Sign up successful!"
                 showAlert = true
-                dismiss()
             }
         } catch {
             DispatchQueue.main.async {

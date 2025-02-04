@@ -82,6 +82,7 @@ struct CartScreen: View {
             TotalPrice = cartData.reduce(0) { $0 + $1.totalPrice }
         }
     }
+    
     var body: some View {
         NavigationView{
             VStack(alignment: .leading, spacing: 0) {
@@ -208,7 +209,7 @@ struct CartScreen: View {
                 }
             }
             .sheet(isPresented: $showingAddressSheet) {
-                AddressEditSheet(address: $addressData, isProfile: false)
+                AddressEditSheet(address: $addressData, isProfile: false, UpdateAddress: getData)
             }
         }
     }

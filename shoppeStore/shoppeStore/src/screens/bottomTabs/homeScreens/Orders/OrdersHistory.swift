@@ -100,19 +100,21 @@ struct OrdersHistory: View {
     var body: some View {
         VStack(alignment: .leading) {
             
-            HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
+            VStack(alignment: .leading){
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                    }
+                    Text(flag == "History" ? "Order History" : flag ==  "Active" ? "Active Orders" : "Returns")
                         .font(.title2)
-                        .foregroundColor(.black)
+                        .bold()
                 }
-                Text(flag == "History" ? "Order History" : flag ==  "Active" ? "Active Orders" : "Returns")
-                    .font(.title2)
-                    .bold()
+                .padding(.leading, 10)
             }
-            .padding(.leading, 10)
             
             ScrollView {
                 VStack(spacing: 10) {

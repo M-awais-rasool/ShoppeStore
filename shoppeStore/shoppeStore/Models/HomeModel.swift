@@ -91,11 +91,20 @@ struct CartListProduct: Identifiable, Decodable {
 
 struct AddressData:Decodable{
     let status:String
-    let data:Address
+    let data:Address?
 }
 
 struct Address :Identifiable, Decodable{
     let id :String
+    let name:String
+    let address:String
+    let apartment:String
+    let city:String
+    let district:String
+    let phone:String
+}
+
+struct AddAddress{
     let name:String
     let address:String
     let apartment:String

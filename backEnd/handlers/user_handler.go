@@ -130,6 +130,7 @@ func SignUp(c *gin.Context) {
 	file, fileHeader, err := c.Request.FormFile("image")
 
 	if name == "" || email == "" || password == "" || err != nil {
+		log.Println("All fields are required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "All fields are required"})
 		return
 	}
@@ -138,6 +139,7 @@ func SignUp(c *gin.Context) {
 	var exists bool
 	err = database.DB.QueryRow("SELECT COUNT(1) FROM users WHERE email = ?", email).Scan(&exists)
 	if err != nil {
+		log.Println("Failed to check email:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check email"})
 		return
 	}
@@ -148,12 +150,14 @@ func SignUp(c *gin.Context) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Println("Failed to hash password:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
 	imageURL, err := Upload_Image(c, file, fileHeader)
 	if err != nil {
+		log.Println("Failed to upload image:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image"})
 		return
 	}
@@ -162,6 +166,7 @@ func SignUp(c *gin.Context) {
 	id := uuid.NewString()
 	_, err = database.DB.Exec(query, id, name, email, string(hashedPassword), imageURL)
 	if err != nil {
+		log.Println("Failed to insert data:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
