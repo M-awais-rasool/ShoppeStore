@@ -94,6 +94,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/Auth/delete-account": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently delete user account and all related data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Delete User Account",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/Auth/email-check": {
             "post": {
                 "description": "Check if the user email exists in the database",
@@ -987,7 +1018,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string",
-                    "example": "Confirmed, Packed, Shipped, Delivered"
+                    "example": "Confirmed, Packed, Shipped, Delivered, Canceled"
                 }
             }
         },

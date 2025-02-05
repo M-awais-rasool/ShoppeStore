@@ -7,6 +7,7 @@ struct LoginScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showToast = false
     @State private var toastMessage = ""
+    @State private var Data: DataResponse?
     
     func validateInputs() -> Bool {
         emailError = ""
@@ -20,9 +21,11 @@ struct LoginScreen: View {
     func checkEmail() async {
         do {
             let body = ["email": email]
-            let _ = try await emailCheckAPi(body:body)
-            navigateToNextScreen = true
-            
+            let res = try await emailCheckAPi(body:body)
+            if res.status == "success"{
+                Data = res.data
+                navigateToNextScreen = true
+            }
         } catch {
             toastMessage = error.localizedDescription
             showToast = true
@@ -102,7 +105,7 @@ struct LoginScreen: View {
             .navigationBarBackButtonHidden(true)
             .edgesIgnoringSafeArea(.all)
             .navigationDestination(isPresented: $navigateToNextScreen) {
-                PasswordScreen(email: email)
+                PasswordScreen(email: email, image: Data?.image, name: Data?.name)
             }
             .toast(isShowing: $showToast, message: toastMessage)
         }

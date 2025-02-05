@@ -24,9 +24,9 @@ struct ShippingAddress: View {
     
     var body: some View {
         VStack {
-            if let _ = addressData {
+           
                 AddressEditSheet(address: $addressData, isProfile: true,UpdateAddress:getData)
-            }
+          
         }
         .onAppear{
             Task{

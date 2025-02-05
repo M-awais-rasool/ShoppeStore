@@ -19,7 +19,10 @@ struct HomeScreen: View {
             print(error)
         }
     }
-    
+    let saleProduct = [
+        Product(id: "1", name: "black Shorts", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjEbQNzqm7mYj9WulpcWyVS6aWQetZqWT2dw&s", description: "Comfortable red shorts made from premium cotton fabric, perfect for casual wear.", price: 40.0, quantity: 100, category: "Shorts", isWishList: false),
+        Product(id: "2", name: "Blue jean", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSojXgMDxUwizK95OrP6a2wCgqwAIvG74gjgA&s", description: "Cool black pants for casual and outdoor activities.", price: 20.0, quantity: 100, category: "Pants", isWishList: false),
+    ]
     var body: some View {
         NavigationStack{
             ZStack {
@@ -94,6 +97,26 @@ struct HomeScreen: View {
                                 }
                             }
                         }
+                        
+                        //sale product
+                        Image("SaleBanner")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .padding(.bottom,5)
+                            .padding(.top,30)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 20) {
+                                ForEach(saleProduct) { product in
+                                    NavigationLink(destination: ProductDetails(product: product, wishList: product.isWishList))  {
+                                        ProductCard(product: product)
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 5)
+                            .padding(.horizontal, 5)
+                        }
+                        
                         Spacer()
                     }
                     

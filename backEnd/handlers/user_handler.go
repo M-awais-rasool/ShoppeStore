@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"shoppeStore/database"
 	"shoppeStore/models"
+	"shoppeStore/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -47,6 +49,8 @@ func EmailCheck(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{
 		"email": storeUser.Email,
+		"name":  storeUser.Name,
+		"image": storeUser.Image,
 	}})
 }
 
@@ -172,4 +176,80 @@ func SignUp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User signed up successfully"})
+}
+
+// @Summary Delete User Account
+// @Description Permanently delete user account and all related data
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 "Success"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
+// @Router /Auth/delete-account [delete]
+func DeleteAccount(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "token missing"})
+		return
+	}
+
+	claim, err := utils.ValidateToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "token invalid"})
+		return
+	}
+	userID := claim.Subject
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start transaction"})
+		return
+	}
+
+	_, err = tx.Exec("DELETE FROM orderItems WHERE orderID IN (SELECT id FROM orders WHERE userID = ?)", userID)
+	if err != nil {
+		tx.Rollback()
+		log.Println("Error deleting orderItems:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete from order_items"})
+		return
+	}
+
+	_, err = tx.Exec("DELETE FROM orders WHERE userID = ?", userID)
+	if err != nil {
+		tx.Rollback()
+		log.Println("Error deleting orders:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete from orders"})
+		return
+	}
+
+	tables := []string{"cart", "wishlist", "address"}
+	for _, table := range tables {
+		query := fmt.Sprintf("DELETE FROM %s WHERE userID = ?", table)
+		if _, err := tx.Exec(query, userID); err != nil {
+			tx.Rollback()
+			log.Println("Error deleting from", table, ":", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete from " + table})
+			return
+		}
+	}
+
+	_, err = tx.Exec("DELETE FROM users WHERE id = ?", userID)
+	if err != nil {
+		tx.Rollback()
+		log.Println("Error deleting user:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Println("Error committing transaction:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Account deleted successfully"})
 }

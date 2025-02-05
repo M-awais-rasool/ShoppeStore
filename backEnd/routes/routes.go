@@ -14,6 +14,7 @@ func SetRoutes() *gin.Engine {
 	router.POST("/Auth/email-check", handlers.EmailCheck)
 	router.POST("/Auth/login", handlers.Login)
 	router.POST("Auth/sign-up", handlers.SignUp)
+	router.DELETE("Auth/delete-account", handlers.DeleteAccount)
 
 	router.GET("Product/get-products", handlers.GetAllProduct)
 	router.GET("Product/get-related-products", handlers.GetSimilarProducts)

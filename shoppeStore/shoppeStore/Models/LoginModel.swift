@@ -28,10 +28,11 @@ struct EmailRes: Decodable {
     let status: String
     let data: DataResponse?
     let message: String?
-    
-    struct DataResponse: Decodable {
-        let email: String
-    }
+}
+struct DataResponse: Decodable {
+    let email: String
+    let name:String
+    let image:String
 }
 //
 

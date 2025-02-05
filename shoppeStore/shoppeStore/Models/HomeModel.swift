@@ -94,7 +94,7 @@ struct AddressData:Decodable{
     let data:Address?
 }
 
-struct Address :Identifiable, Decodable{
+struct Address :Identifiable, Decodable,Equatable{
     let id :String
     let name:String
     let address:String

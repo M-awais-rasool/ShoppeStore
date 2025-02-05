@@ -19,7 +19,7 @@ definitions:
       orderID:
         type: string
       status:
-        example: Confirmed, Packed, Shipped, Delivered
+        example: Confirmed, Packed, Shipped, Delivered, Canceled
         type: string
     type: object
   models.EmailSignIn:
@@ -118,6 +118,25 @@ paths:
       summary: Get Address
       tags:
       - Address
+  /Auth/delete-account:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete user account and all related data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Delete User Account
+      tags:
+      - Auth
   /Auth/email-check:
     post:
       consumes:

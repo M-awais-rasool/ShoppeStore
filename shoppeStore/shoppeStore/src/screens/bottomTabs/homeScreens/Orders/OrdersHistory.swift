@@ -114,7 +114,7 @@ struct OrdersHistory: View {
                         .bold()
                 }
                 .padding(.leading, 10)
-            }
+            }.frame(maxWidth: .infinity, alignment: .leading)
             
             ScrollView {
                 VStack(spacing: 10) {

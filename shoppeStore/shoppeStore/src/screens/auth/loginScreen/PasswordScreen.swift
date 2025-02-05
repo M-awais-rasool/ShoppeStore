@@ -5,6 +5,8 @@ struct PasswordScreen: View {
     @FocusState private var focusedIndex: Int?
     @AppStorage("isLoggedIn") private var isLoggedIn = false
     let email: String
+    @State var image:String?
+    @State var name:String?
     @State private var showToast = false
     @State private var toastMessage = ""
     
@@ -55,15 +57,22 @@ struct PasswordScreen: View {
                 
                 VStack {
                     VStack(spacing: 16) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 100, height: 100)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 5)
+                        if let profileImageURL = image,
+                           let url = URL(string: profileImageURL) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .frame(width: 100, height: 100)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                    .shadow(radius: 5)
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(width: 100, height: 100)
+                            }}
                         
-                        Text("Hello, Romina!!")
+                        Text("Hello, \(name ?? "Guest")!!")
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundColor(.black)
@@ -147,5 +156,5 @@ struct PasswordScreen: View {
     }
 }
 #Preview {
-    PasswordScreen(email:"asdas")
+    PasswordScreen(email: "asdas", image: "Data?.image", name:" Data?.name")
 }

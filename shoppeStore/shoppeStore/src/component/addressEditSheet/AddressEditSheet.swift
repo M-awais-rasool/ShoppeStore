@@ -21,7 +21,7 @@ struct AddressEditSheet: View {
                     VStack(spacing: 20) {
                         AddressTextField(title: "Full Name", text: $name, icon: "person.fill")
                         
-                        AddressTextField(title: "Street Address", text: $streetAddress, icon: "house.fill")
+                        AddressTextField(title: "Address", text: $streetAddress, icon: "house.fill")
                         
                         AddressTextField(title: "Apartment, Suite, etc. (optional)", text: $apartment, icon: "building.2.fill")
                         
@@ -88,6 +88,9 @@ struct AddressEditSheet: View {
             )
         }
         .onAppear {
+            updateFieldsFromAddress()
+        }
+        .onChange(of: address) {
             updateFieldsFromAddress()
         }
         .navigationBarBackButtonHidden(true)
