@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"time"
 
@@ -22,6 +23,10 @@ func Upload_Image(c *gin.Context, file multipart.File, header *multipart.FileHea
 		return "", fmt.Errorf("no file uploaded")
 	}
 	defer file.Close()
+
+	// Log credentials info (without exposing full secrets)
+	log.Printf("AWS Configuration - Region: %s, Bucket: %s, AccessKey: %s..., SecretKey length: %d",
+		s3Region, s3Bucket, accessKeyID[:4]+"...", len(secretKey))
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(s3Region),
@@ -45,6 +50,7 @@ func Upload_Image(c *gin.Context, file multipart.File, header *multipart.FileHea
 		Body:   file,
 	})
 	if err != nil {
+		log.Printf("S3 PutObject Error: %v", err)
 		return "", fmt.Errorf("failed to upload to S3: %v", err)
 	}
 
@@ -54,5 +60,6 @@ func Upload_Image(c *gin.Context, file multipart.File, header *multipart.FileHea
 		filename,
 	)
 
+	log.Printf("File uploaded successfully to: %s", publicURL)
 	return publicURL, nil
 }

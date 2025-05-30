@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: shoppe_store_mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Strong@Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    networks:
+      - shoppe-network
+
+  mssql-init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: mssql_init
+    depends_on:
+      - mssql
+    volumes:
+      - ./sql:/sql
+    entrypoint: [ "/bin/bash", "/sql/wait-for-mssql.sh" ]
+    networks:
+      - shoppe-network
+
+networks:
+  shoppe-network:
+    driver: bridge
+
+volumes:
+  mssql-data:

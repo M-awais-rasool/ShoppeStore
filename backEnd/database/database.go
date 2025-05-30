@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"shoppeStore/envConfig"
+	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
 )
@@ -12,24 +13,70 @@ import (
 var DB *sql.DB
 
 func ConnectDB() {
-	var err error
 
 	envConfig.LoadEnv()
 
 	_, _, _, _, dbServer, dbUser, dbPassword, dbPort, dbName, dbEncrypt := envConfig.GetEnvVars()
 
-	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s",
-		dbServer, dbUser, dbPassword, dbPort, dbName, dbEncrypt)
+	// Build connection string to master database first
+	masterConnString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=master;encrypt=%s;trustservercertificate=true",
+		dbServer, dbUser, dbPassword, dbPort, dbEncrypt)
 
-	DB, err = sql.Open("mssql", connString)
-	if err != nil {
-		log.Fatalf("Error opening connection to database: %v", err)
+	// Try to connect with retries
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		log.Printf("Attempting to connect to database server (attempt %d/%d)...", i+1, maxRetries)
+
+		// Connect to master database first
+		tempDB, err := sql.Open("mssql", masterConnString)
+		if err != nil {
+			log.Printf("Error opening connection to database: %v", err)
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		err = tempDB.Ping()
+		if err != nil {
+			log.Printf("Error pinging database: %v", err)
+			tempDB.Close()
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		// Check if our database exists, if not create it
+		checkDbQuery := fmt.Sprintf("IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '%s') CREATE DATABASE %s", dbName, dbName)
+		_, err = tempDB.Exec(checkDbQuery)
+		if err != nil {
+			log.Printf("Error creating database if not exists: %v", err)
+			tempDB.Close()
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		// Close master connection
+		tempDB.Close()
+
+		// Now connect to our actual database
+		connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s;trustservercertificate=true",
+			dbServer, dbUser, dbPassword, dbPort, dbName, dbEncrypt)
+
+		DB, err = sql.Open("mssql", connString)
+		if err != nil {
+			log.Printf("Error opening connection to application database: %v", err)
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		err = DB.Ping()
+		if err != nil {
+			log.Printf("Error pinging application database: %v", err)
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		log.Println("Connected to the database successfully!")
+		return
 	}
 
-	err = DB.Ping()
-	if err != nil {
-		log.Fatalf("Error pinging database: %v", err)
-	}
-
-	log.Println("Connected to the database successfully!")
+	log.Fatalf("Failed to connect to database after %d attempts", maxRetries)
 }

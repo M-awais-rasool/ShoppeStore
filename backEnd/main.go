@@ -15,14 +15,25 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	log.Println("Initializing application...")
+
+	// Initialize environment variables
+	envConfig.LoadEnv()
+
+	// Connect to database
+	log.Println("Connecting to database...")
 	database.ConnectDB()
+
+	// Set up routes
+	log.Println("Setting up routes...")
 	router := routes.SetRoutes()
 
-	log.Println("Starting server on :8080")
+	// Start server
+	serverPort := ":8080"
+	log.Printf("Starting server on %s", serverPort)
 	log.Println("Swagger UI available at http://localhost:8080/swagger/index.html")
-	router.Run(":8080")
-}
 
-func init() {
-	envConfig.LoadEnv()
+	if err := router.Run(serverPort); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
