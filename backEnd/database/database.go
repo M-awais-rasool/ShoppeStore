@@ -18,16 +18,13 @@ func ConnectDB() {
 
 	_, _, _, _, dbServer, dbUser, dbPassword, dbPort, dbName, dbEncrypt := envConfig.GetEnvVars()
 
-	// Build connection string to master database first
 	masterConnString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=master;encrypt=%s;trustservercertificate=true",
 		dbServer, dbUser, dbPassword, dbPort, dbEncrypt)
 
-	// Try to connect with retries
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("Attempting to connect to database server (attempt %d/%d)...", i+1, maxRetries)
 
-		// Connect to master database first
 		tempDB, err := sql.Open("mssql", masterConnString)
 		if err != nil {
 			log.Printf("Error opening connection to database: %v", err)
@@ -43,7 +40,6 @@ func ConnectDB() {
 			continue
 		}
 
-		// Check if our database exists, if not create it
 		checkDbQuery := fmt.Sprintf("IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '%s') CREATE DATABASE %s", dbName, dbName)
 		_, err = tempDB.Exec(checkDbQuery)
 		if err != nil {
@@ -53,10 +49,8 @@ func ConnectDB() {
 			continue
 		}
 
-		// Close master connection
 		tempDB.Close()
 
-		// Now connect to our actual database
 		connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s;trustservercertificate=true",
 			dbServer, dbUser, dbPassword, dbPort, dbName, dbEncrypt)
 
